@@ -68,38 +68,37 @@ bool readArguments(char argc, char **argv, char *outF, char *errF, int *maxLen, 
     return result;
 }
 
-void logger(int argc, char *argv[]) {
-    char *myFifo = "/tmp/myfifo";
-    mkfifo(myFifo, 0666);            //0666 -> every type of user can read and write
-    int fd = open(myFifo, O_RDONLY); //opening FIFO read only
-    //fdup2(fd,STDIN_FILENO);
-    int timer = 5;
-    int maxLen = 80;
-    char buffer[maxLen];
-    char callerID[maxLen];
+int loggerIsRunning(char *loggerIDfile, char *buffer, int *pfdID) {
+    int fdID = *pfdID;
+    int loggerID = 0;
 
-    FILE *myLog = fopen(argv[1], "a+"); //opening logFile (a+ -> create+append)
-    if (myLog == NULL) {                //smth is wrong
-        perror("Opening logFile");
-        exit(EXIT_FAILURE);
+    fdID = open(loggerIDfile, O_RDWR);
+    /* if loggerID file not found, create one and write new logger ID */
+    if (fdID == -1) {
+        perror("Opening logger ID file");
+        if ((fdID = open(loggerIDfile, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR)) == -1) {
+            perror("Creating file");
+            exit(EXIT_FAILURE);
+        } else {
+            printf("File created\n");
+        }
     }
 
-    fprintf(myLog, "Daemon started\n\n");
-    fflush(myLog);
-    int size;
-    while (strcmp(buffer, "kill")) {
-        kill(getpid(), SIGSTOP);
-        //read(fd, callerID, maxLen);
-        size = read(fd, buffer, maxLen) - 1;
-        fprintf(myLog, "%s  |  size:%d\n", buffer, size);
-        fflush(myLog);
-
-        //timer--;
-        sleep(1);
+    if (!read(fdID, buffer, BUFF_S)) { //if file is empty
+        printf("File is empty\n");
+    } else { //get existing logger ID
+        printf("Found existing logger ID\n");
+        read(fdID, buffer, BUFF_S);
+        loggerID = atoi(buffer);
     }
 
-    int myFd = open(argv[2], O_WRONLY | O_TRUNC);
+    *pfdID = fdID;
+    return loggerID;
+}
 
-    fprintf(myLog, "\nDaemon terminated\n");
-    fclose(myLog);
+void removeFifo(char *fifoPath) {
+    char rmFifo[PATH_S] = "";
+    strcat(rmFifo, "rm ");
+    strcat(rmFifo, fifoPath);
+    system(rmFifo);
 }
