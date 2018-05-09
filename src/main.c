@@ -12,6 +12,7 @@
 
 int main(int argc, char *argv[]) {
     prova();
+    printf("ciao\n");
 
     return 0;
 }
