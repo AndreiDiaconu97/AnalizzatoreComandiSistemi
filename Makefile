@@ -39,16 +39,16 @@ clean c:
 
 build b: $(BIN)/$(exec)
 
-.$(BIN)/$(exec) : $(BIN) $(TMP) $(objs) #first checks folders
+$(BIN)/$(exec) : $(BIN) $(TMP) $(objs) #first checks folders
 	@echo "\nLinking *.o files..."
 	@$(CC) -o $@ $(objs)
 	@echo "Executable is ready, path:'./$@'"
 
-.$(BIN) $(TMP): 
+$(BIN) $(TMP): 
 	@mkdir -p $@
 	@echo "Folder '$@' created."
 
-.$(TMP)/%.o : $(SRC)/%.c $(deps)
+$(TMP)/%.o : $(SRC)/%.c $(deps)
 	@$(CC) -o $@ -c $<
 	@echo "./$@ updated"
 
