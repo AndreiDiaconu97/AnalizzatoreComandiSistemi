@@ -12,7 +12,7 @@ objs := $(srcs:$(SRC)%.c=$(TMP)%.o) #one '.o' for every '.c' file
 deps := $(wildcard $(SRC)/*.h) # header files
 
 
-.PHONY: help build clean
+.PHONY: DEFAULT help h build b clean c
 ### RULES ###
 DEFAULT:
 	@echo "type 'help' or 'h' for info"
@@ -20,7 +20,7 @@ DEFAULT:
 help h:
 	@echo "INFO [command]: description"
 	@echo "--------------------------------------------------------------------------------"
-	@echo "[help  | h]   Lists usable commands."
+	@echo "[help  | h] :  Lists usable commands."
 	@echo "[build | b] : Sets up project structure, files and executable."
 	@echo "[clean | c] : Cancels every file and folder created with [build | b] command."
 	@echo "\n"

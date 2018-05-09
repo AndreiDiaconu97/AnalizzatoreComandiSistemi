@@ -1,3 +1,4 @@
+#include "myLibrary.h"
 #include <errno.h>
 #include <fcntl.h>
 #include <signal.h>
@@ -8,10 +9,17 @@
 #include <time.h>
 #include <unistd.h>
 
-#include "myLibrary.h"
-
 int main(int argc, char *argv[]) {
-    prova();
+    int maxLen = BUFF_S;
+    bool returnCode = false;
+    char outfile[BUFF_S] = "change this";
+    char errfile[BUFF_S] = "change this";
 
-    return 0;
+    if (!readArguments(argc, argv, outfile, errfile, &maxLen, &returnCode)) {
+        printf("CLOSING PROGRAM\n");
+        exit(EXIT_FAILURE);
+    }
+    printf("%s\n", outfile);
+
+    return EXIT_SUCCESS;
 }
