@@ -63,7 +63,7 @@ int main(int argc, char *argv[]) {
         /* logger process */
         if (!logIsRun) {
             /* logger must be leader of its own group in order to be a daemon */
-            setsid(); 
+            setsid();
 
             //printf("Child:%d\n", getpid());
             char *argss[3] = {logfile, loggerIDfile, myFifo};

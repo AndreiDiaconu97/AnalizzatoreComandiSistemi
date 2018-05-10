@@ -4,7 +4,7 @@
 CC := gcc
 SRC := src
 BIN := bin
-TMP := tmp
+TMP := /tmp/temp
 
 exec := run
 srcs := $(wildcard $(SRC)/*.c) # source files

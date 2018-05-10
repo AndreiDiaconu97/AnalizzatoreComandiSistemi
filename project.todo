@@ -1,24 +1,31 @@
 AnalizzatoreComandiSistemi:
+  ☐ @critical Rename project folder to LABSO1-2017_2018--MAT01_MAT02_MAT03_MAT04
+  ☐ Clean code
+  ☐ Comment code
   Here a TO-DO list for every file, based on folder hierarchy
   bin:
     ✔ ok @done(18-05-10 16:17)
   src:
     logger.c:
-
+      ☐ @low Choose if automatically delete fifo before closing
+      ☐ @low Choose if automatically delete loggerPid.txt before closing
     main.c:
+      ✔ support '--command=value' format type arguments @done(18-05-10 17:27)
+      ✘ support '-cmd value' format type arguments @cancelled(18-05-10 17:27)
 
     myLibrary.h:
       ✔ ok @done(18-05-10 16:18)
     utility.c:
     
   tmp:
-    ☐ Check if every file is deleted after project is completed
-    ☐ @high put fifo file here
-    ☐ @high put loggerID file here
+    Check if every file is deleted after project is completed
+    ☐ @low try to put fifo file here
+    ☐ @low try put loggerID file here
   log:
-    ☐ @low put log files here
+    ☐ put log files here
   Makefile:
-    ☐ try to hide some commands
+    ☐ try to hide some commands from tab-suggestions
+    ☐ @high Implement user-defined MACRO for compilation
 
 Archive:
   Completed todos will be moved here  
