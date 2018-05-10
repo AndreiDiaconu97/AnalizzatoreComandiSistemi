@@ -107,30 +107,24 @@ void showSettings(char settings[SET_N][2][PATH_S]) {
     printf("----------------------------------------\n\n");
 }
 
-int loggerIsRunning(char *loggerIDfile, char *buffer, int *pfdID) {
-    int fdID = *pfdID;
-    int loggerID = 0;
+void loggerIsRunning(int *fdID, int *loggerID, char *loggerIDfile) {
+    char buffer[BUFF_S];
 
-    fdID = open(loggerIDfile, O_RDWR);
     /* if loggerID file not found, create one and write new logger ID */
-    if (fdID == -1) {
+    *fdID = open(loggerIDfile, O_RDWR);
+    if (*fdID == -1) {
         perror("Opening logger ID file");
-        if ((fdID = open(loggerIDfile, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR)) == -1) {
+        if ((*fdID = open(loggerIDfile, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR)) == -1) {
             perror("Creating file");
             exit(EXIT_FAILURE);
-        } else {
-            printf("Logger ID file created\n");
+        }
+    } else {
+        if (read(*fdID, buffer, BUFF_S)) { //if file is not empty
+            printf("Found existing logger ID\n");
+            read(*fdID, buffer, BUFF_S);
+            *loggerID = atoi(buffer);
         }
     }
-
-    if (read(fdID, buffer, BUFF_S)) { //if file is empty
-        printf("Found existing logger ID\n");
-        read(fdID, buffer, BUFF_S);
-        loggerID = atoi(buffer);
-    }
-
-    *pfdID = fdID;
-    return loggerID;
 }
 
 void removeFifo(char *fifoPath) {

@@ -45,46 +45,42 @@ int main(int argc, char *argv[]) {
     char loggerIDfile[PATH_S] = "loggerPid.txt";
     char *buffer = malloc(sizeof(char) * buffS);
 
-    /* search for existing logger before any forking */
-    int logIsRun = loggerIsRunning(loggerIDfile, buffer, &fdID);
-
     /* create FIFO file if needed */
     char *myFifo = "/tmp/myfifo";
     if (mkfifo(myFifo, 0666)) {
         perror("FIFO");
     }
 
-    /* fork for logger if needed */
-    if ((loggerID = fork()) < 0) {
-        perror("FORK result");
-        exit(EXIT_FAILURE);
-    }
+    /* search for existing logger before any forking */
+    loggerIsRunning(&fdID, &loggerID, loggerIDfile);
+
+    /* fork for logger if no existing one is found */
     if (loggerID == 0) {
-        /* logger process */
-        if (!logIsRun) {
+        if ((loggerID = fork()) < 0) {
+            perror("FORK result");
+            exit(EXIT_FAILURE);
+        }
+        if (loggerID == 0) {
+            /* logger process */
             /* logger must be leader of its own group in order to be a daemon */
             setsid();
-
             //printf("Child:%d\n", getpid());
             char *argss[3] = {logfile, loggerIDfile, myFifo};
             logger(sizeof argss, argss);
+            exit(EXIT_SUCCESS);
+        } else {
+            /* if there is not logger found save childID on file */
+            printf("Saving actual logger ID\n");
+            sprintf(buffer, "%d", loggerID);
+            if (write(fdID, buffer, strlen(buffer)) == -1) { //writing actual running logger ID
+                perror("Saving result");
+            }
+            close(fdID);
         }
-        exit(EXIT_SUCCESS);
     }
 
     /* father process */
     printf("Father: %d\n", getpid());
-
-    if (!logIsRun) {
-        printf("Saving actual logger ID\n");
-        sprintf(buffer, "%d", loggerID);
-        if (write(fdID, buffer, strlen(buffer)) == -1) { //writing actual running logger ID
-            perror("Saving result");
-        }
-    } else {
-        loggerID = logIsRun;
-    }
-    close(fdID);
     printf("Logger ID: %d\n", loggerID);
 
     int fdFIFO = open(myFifo, O_WRONLY); //open one end of the pipe

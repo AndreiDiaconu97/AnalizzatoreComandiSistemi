@@ -26,7 +26,7 @@ void logger(int argc, char *argv[]) {
 
     fprintf(myLog, "Daemon started\n\n");
     fflush(myLog);
-    int size;
+    ssize_t size;
     while (strcmp(buffer, "kill")) {
         //kill(getpid(), SIGSTOP);
         //read(fd, callerID, maxLen);
@@ -35,7 +35,7 @@ void logger(int argc, char *argv[]) {
                 break;
             }
             size--;
-            fprintf(myLog, "%s  |  size:%d\n", buffer, size);
+            fprintf(myLog, "%s  |  size:%zi\n", buffer, size);
             fflush(myLog);
         }
         //timer--;
