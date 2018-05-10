@@ -10,7 +10,7 @@
 #include <unistd.h>
 
 void logger(int argc, char *argv[]) {
-    char *myFifo = "/tmp/myfifo";
+    char *myFifo = argv[2];
     int fd = open(myFifo, O_RDONLY); //opening FIFO read only
     //fdup2(fd,STDIN_FILENO);
     int timer = 5;
@@ -43,7 +43,8 @@ void logger(int argc, char *argv[]) {
     }
 
     removeFifo(myFifo);
-    int myFd = open(argv[1], O_WRONLY | O_TRUNC);
+    removeFifo(argv[1]);
+    //int myFd = open(argv[1], O_WRONLY | O_TRUNC);
 
     fprintf(myLog, "\nDaemon terminated\n");
     fclose(myLog);
