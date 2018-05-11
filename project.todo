@@ -6,6 +6,7 @@ AnalizzatoreComandiSistemi:
   bin:
     ✔ ok @done(18-05-10 16:17)
   src:
+    ☐ @high check buffers when using all of them or more
     logger.c:
       ☐ @low Choose if automatically delete fifo before closing
       ☐ @low Choose if automatically delete loggerPid.txt before closing

@@ -85,19 +85,19 @@ int main(int argc, char *argv[]) {
     int fdFIFO;
     fdFIFO = open(myFifo, O_WRONLY); //open one end of the pipe
     //printf("If you read this means that child opened FIFO too.\n");
-
     printf("\nREADY:\n");
     while (strcmp(buffer, "quit")) {
         printf(">>");
         getline(&buffer, &buffS, stdin);
-        buffer[strlen(buffer) - 1] = '\0'; //remove final '\n'
-
+        rmNewline(buffer);
         kill(loggerID, SIGCONT);
 
         if (!strcmp(buffer, "kill")) {
             write(fdFIFO, buffer, strlen(buffer) + 1);
         } else {
-            runCommand("ls", fdFIFO);
+            //runCommand("ls", fdFIFO);
+            
+            write(fdFIFO, buffer, strlen(buffer) + 1);
         }
 
         //write(fdFIFO, "COMMAND", strlen("COMMAND") + 1);

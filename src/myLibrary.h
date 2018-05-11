@@ -8,7 +8,7 @@ typedef int bool;
 
 /* USER MACRO */
 #define PATH_S 512
-#define BUFF_S 80
+#define BUFF_S 8
 #define EXTNAME "../tmp/"
 //TODO(implement some MACROs)
 
@@ -28,6 +28,8 @@ void showSettings(char settings[SET_N][2][PATH_S]);
 void loggerIsRunning(int *fdID, int *loggerID, char *loggerIDfile);
 void runCommand(char *cmd, int fd);
 void removeFifo(char *fifoPath);
+char *getcTime();
+void rmNewline(char *str);
 
 /* logger-starting function */
 void logger(int argc, char *argv[]);
