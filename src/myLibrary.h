@@ -26,6 +26,7 @@ bool readArguments(int argc, char **argv, char settings[SET_N][2][PATH_S]);
 bool evaluateCommand(char settings[SET_N][2][PATH_S], char *arg, char *val);
 void showSettings(char settings[SET_N][2][PATH_S]);
 void loggerIsRunning(int *fdID, int *loggerID, char *loggerIDfile);
+void runCommand(char *cmd, int fd);
 void removeFifo(char *fifoPath);
 
 /* logger-starting function */

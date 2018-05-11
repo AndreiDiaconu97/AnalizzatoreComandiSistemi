@@ -127,6 +127,24 @@ void loggerIsRunning(int *fdID, int *loggerID, char *loggerIDfile) {
     }
 }
 
+void runCommand(char *cmd, int fd) {
+    FILE *fp;
+    char buffer[PATH_S];
+
+    /* Open the command for reading. */
+    fp = popen(cmd, "r");
+    if (fp == NULL) {
+        printf("Failed to run command\n");
+        exit(1);
+    }
+    /* Read the output a line at a time - output it. */
+    while (fgets(buffer, sizeof(buffer) - 1, fp) != NULL) {
+        //printf("%s", buffer);
+        write(fd, buffer, strlen(buffer));
+    }
+    pclose(fp);
+}
+
 void removeFifo(char *fifoPath) {
     char rmFifo[PATH_S] = "";
     strcat(rmFifo, "rm ");

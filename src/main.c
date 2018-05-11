@@ -61,12 +61,11 @@ int main(int argc, char *argv[]) {
             exit(EXIT_FAILURE);
         }
         if (loggerID == 0) {
-            /* logger process */
             /* logger must be leader of its own group in order to be a daemon */
             setsid();
             //printf("Child:%d\n", getpid());
             char *argss[3] = {logfile, loggerIDfile, myFifo};
-            logger(sizeof argss, argss);
+            logger(sizeof argss, argss); //logger process
             exit(EXIT_SUCCESS);
         } else {
             /* if there is not logger found save childID on file */
@@ -83,7 +82,8 @@ int main(int argc, char *argv[]) {
     printf("Father: %d\n", getpid());
     printf("Logger ID: %d\n", loggerID);
 
-    int fdFIFO = open(myFifo, O_WRONLY); //open one end of the pipe
+    int fdFIFO;
+    fdFIFO = open(myFifo, O_WRONLY); //open one end of the pipe
     //printf("If you read this means that child opened FIFO too.\n");
 
     printf("\nREADY:\n");
@@ -91,8 +91,16 @@ int main(int argc, char *argv[]) {
         printf(">>");
         getline(&buffer, &buffS, stdin);
         buffer[strlen(buffer) - 1] = '\0'; //remove final '\n'
-        write(fdFIFO, buffer, strlen(buffer) + 1);
-        //kill(loggerID, SIGCONT);
+
+        kill(loggerID, SIGCONT);
+
+        if (!strcmp(buffer, "kill")) {
+            write(fdFIFO, buffer, strlen(buffer) + 1);
+        } else {
+            runCommand("ls", fdFIFO);
+        }
+
+        //write(fdFIFO, "COMMAND", strlen("COMMAND") + 1);
     }
     close(fdFIFO);
     return EXIT_SUCCESS;
