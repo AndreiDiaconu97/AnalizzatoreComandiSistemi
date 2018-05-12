@@ -1,6 +1,6 @@
 AnalizzatoreComandiSistemi:
   ☐ @critical Rename project folder to LABSO1-2017_2018--MAT01_MAT02_MAT03_MAT04
-  ☐ @today Fix buffers and char* sizes
+  ✔ @today Fix buffers and char* sizes @done(18-05-13 00:47)
   ☐ Clean code
   ☐ Comment code
   Here a TO-DO list for every file, based on folder hierarchy
@@ -11,7 +11,7 @@ AnalizzatoreComandiSistemi:
     logger.c:
       ☐ @low Choose if automatically delete fifo before closing
       ☐ @low Choose if automatically delete loggerPid.txt before closing
-      ☐ @high  fix logger fifo
+      ✔ @high  fix logger fifo @done(18-05-13 00:47)
       ☐ implement log formatting ("txt" and "csv")
     main.c:
       ✔ support '--command=value' format type arguments @done(18-05-10 17:27)
@@ -36,6 +36,8 @@ Archive:
 
 
 //////////////////////////////////////////////////////////////////////////////////
+
+
 ::TODO guide::
 
 New:

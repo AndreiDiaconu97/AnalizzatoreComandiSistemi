@@ -8,7 +8,7 @@ typedef int bool;
 
 /* USER MACRO */
 #define PATH_S 512
-#define BUFF_S 2
+#define BUFF_S 50
 #define EXTNAME "../tmp/"
 //TODO(implement some MACROs)
 

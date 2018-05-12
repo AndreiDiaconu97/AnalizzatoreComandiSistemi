@@ -36,8 +36,10 @@ bool readArguments(int argc, char **argv, char settings[SET_N][2][PATH_S]) {
     char tmpVal[PATH_S];
     /* reading program arguments */
     for (int i = 0; i < argc; i++) {
+        /* clean arrays before reading each argument */
         strncpy(tmpArg, "", sizeof tmpArg);
         strncpy(tmpVal, "", sizeof tmpVal);
+
         /* find command arguments (commands begin with "--") */
         if (!strncmp(argv[i], "-", 1)) {
             /* Arguments are in form '--command=value',thus  */

@@ -86,7 +86,7 @@ int main(int argc, char *argv[]) {
 
     //printf("If you read this means that child opened FIFO too.\n");
     printf("\nREADY:\n");
-    while (strcmp(buffer, "quit")) {
+    while (strcmp(buffer, "quit") != 0) {
         printf(">>");
         getline(&buffer, &buffS, stdin);
         rmNewline(buffer);
@@ -94,7 +94,7 @@ int main(int argc, char *argv[]) {
         kill(loggerID, SIGCONT);
         fdFIFO = open(myFifo, O_WRONLY); //open one end of the pipe
 
-        if (!strcmp(buffer, "kill")) {
+        if (strcmp(buffer, "kill") == 0) {
             write(fdFIFO, buffer, strlen(buffer) + 1);
             kill(loggerID, SIGCONT);
         } else {
@@ -109,5 +109,6 @@ int main(int argc, char *argv[]) {
         }
         close(fdFIFO);
     }
+    free(buffer);
     return EXIT_SUCCESS;
 }

@@ -10,16 +10,20 @@
 #include <unistd.h>
 
 /* to use with char *inputs[4] */
-typedef enum input_format {CMD,OUT,DATA,OTHER} i_f;
-
+typedef enum input_format { CMD,
+                            DATA,
+                            OUT,
+                            OTHER } i_f;
 
 void logger(int argc, char *argv[]) {
     char buffer[BUFF_S];
-    char container[1024];
     char *separator = "\n-----------------------\n";
     char *aCapo = "\n";
     char *c_time_string;
-    char *inputs[4]; 
+    char ssize[80];
+
+    int inNum = 4;
+    char *inputs[inNum];
 
     /* open FIFO from reading side */
     int myFifo = open(argv[2], O_RDONLY);
@@ -32,33 +36,43 @@ void logger(int argc, char *argv[]) {
 
     ssize_t size;
     while (strcmp(buffer, "kill")) {
-        write(myLog, separator, strlen(separator)); //SEP
         /* timestamp */
+        write(myLog, separator, strlen(separator)); //SEP
         c_time_string = getcTime();
         write(myLog, c_time_string, strlen(c_time_string));
+        write(myLog, separator, strlen(separator)); //SEP
 
-        int x = 0;
-        int inNum = 1;
         /* read FIFO until open */
+        /*
         while (size = read(myFifo, buffer, sizeof buffer)) {
             // command
-            inputs[0] = container;
-            inNum = 1;
-            for (int i = 0; i < size; i++) {
-                container[x] = buffer[i];
-                x++;
-            }
         }
-        write(myLog, container, x);
-        write(myLog, aCapo, strlen(aCapo));
-
-        for (int i = 0; i < x; i++) {
-            if (container[i] == '\0') {
-                inputs[inNum++] = &container[i + 1];
-            }
+        */
+        size = read(myFifo, buffer, BUFF_S);
+        if ((read(myFifo, buffer, BUFF_S)) != 0) {
+            write(myLog, separator, strlen(separator)); //SEP
+            sprintf(ssize, "ERROR: fifo contained more than BUFF_S=%d chars", BUFF_S);
+            write(myLog, ssize, strlen(ssize));
+            write(myLog, separator, strlen(separator)); //SEP
+            break;
         }
 
-        for (int i = 0; i < sizeof inputs / sizeof inputs[0]; i++) {
+        write(myLog, separator, strlen(separator)); //SEP
+        sprintf(ssize, "SIZE: %zi", size);
+        write(myLog, ssize, strlen(ssize));
+        write(myLog, separator, strlen(separator)); //SEP
+
+        /* get every input data from last buffer */
+        int inTmp = 0;
+        inputs[inTmp++] = buffer;
+        for (int i = 0; i < size; i++) {
+            if (buffer[i] == '\0') {
+                inputs[inTmp++] = &buffer[i + 1];
+            }
+        }
+
+        /* print every input data */
+        for (int i = 0; i < inNum; i++) {
             write(myLog, inputs[i], strlen(inputs[i]));
             write(myLog, aCapo, strlen(aCapo));
         }
