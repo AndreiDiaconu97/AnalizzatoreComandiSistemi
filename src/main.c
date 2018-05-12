@@ -81,27 +81,31 @@ int main(int argc, char *argv[]) {
     /* father process */
     printf("Father: %d\n", getpid());
     printf("Logger ID: %d\n", loggerID);
-
+    char *prova = "zero";
     int fdFIFO;
-    fdFIFO = open(myFifo, O_WRONLY); //open one end of the pipe
+
     //printf("If you read this means that child opened FIFO too.\n");
     printf("\nREADY:\n");
     while (strcmp(buffer, "quit")) {
         printf(">>");
         getline(&buffer, &buffS, stdin);
         rmNewline(buffer);
+
         kill(loggerID, SIGCONT);
+        fdFIFO = open(myFifo, O_WRONLY); //open one end of the pipe
 
         if (!strcmp(buffer, "kill")) {
             write(fdFIFO, buffer, strlen(buffer) + 1);
+            kill(loggerID, SIGCONT);
         } else {
             //runCommand("ls", fdFIFO);
-            
             write(fdFIFO, buffer, strlen(buffer) + 1);
+            write(fdFIFO, "CONAD", strlen("CONAD") + 1);
+            //pause();
+            //sleep(1);
+            //write(fdFIFO, prova, sizeof prova);
         }
-
-        //write(fdFIFO, "COMMAND", strlen("COMMAND") + 1);
+        close(fdFIFO);
     }
-    close(fdFIFO);
     return EXIT_SUCCESS;
 }

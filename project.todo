@@ -10,11 +10,11 @@ AnalizzatoreComandiSistemi:
     logger.c:
       ☐ @low Choose if automatically delete fifo before closing
       ☐ @low Choose if automatically delete loggerPid.txt before closing
-      ☐ @today fix logger fifo
+      ☐ @high  fix logger fifo
     main.c:
       ✔ support '--command=value' format type arguments @done(18-05-10 17:27)
       ✘ support '-cmd value' format type arguments @cancelled(18-05-10 17:27)
-      ☐ @today use errno=errorCode and strerror in orderd to get error message from bash command finishing with echo $?
+      ☐ @high  use errno=errorCode and strerror in orderd to get error message from bash command finishing with echo $?
     myLibrary.h:
       ✔ ok @done(18-05-10 16:18)
     utility.c:
