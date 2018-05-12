@@ -101,6 +101,8 @@ int main(int argc, char *argv[]) {
             //runCommand("ls", fdFIFO);
             write(fdFIFO, buffer, strlen(buffer) + 1);
             write(fdFIFO, "CONAD", strlen("CONAD") + 1);
+            write(fdFIFO, "2", strlen("2") + 1);
+            write(fdFIFO, "data", strlen("data") + 1);
             //pause();
             //sleep(1);
             //write(fdFIFO, prova, sizeof prova);

@@ -13,11 +13,12 @@ void logger(int argc, char *argv[]) {
     //fdup2(fd,STDIN_FILENO);
     int timer = 5;
     char buffer[BUFF_S];
+    char container[1024];
     char *separator = "\n-----------------------\n";
     char *aCapo = "\n";
     char *c_time_string;
     char sizz[BUFF_S] = "SIZE:\n";
-    char *secondPart;
+    char *inputs[4];
 
     /* open FIFO from reading side */
     //char *myFifo = argv[2];
@@ -41,32 +42,44 @@ void logger(int argc, char *argv[]) {
     ssize_t totSize = 0;
     while (strcmp(buffer, "kill")) {
         write(myLog, separator, strlen(separator)); //SEP
-
         /* timestamp */
         c_time_string = getcTime();
         write(myLog, c_time_string, strlen(c_time_string));
         write(myLog, separator, strlen(separator)); //SEP
 
+        int x = 0;
+        int inNum = 1;
         /* read FIFO until open */
         while (size = read(myFifo, buffer, sizeof buffer)) {
-            if (size != BUFF_S) {
-                size--;
-                write(myLog, buffer, size);
-            } else {
-                for (int x = 0; x < BUFF_S; x++) {
-                    if (buffer[x] == '\0') {
-                        write(myLog, buffer, x);
-                        secondPart = buffer + x + 1;
-                        write(myLog, aCapo, strlen(aCapo));
-                        write(myLog, secondPart, size - x - 1);
-                    }
-                }
+            // command
+            // write(myLog, buffer, size - 1);
+            inputs[0] = container;
+            inNum = 1;
+
+            for (int i = 0; i < size; i++) {
+                container[x] = buffer[i];
+                x++;
             }
 
             totSize += size;
             //write(myLog, buffer, size);
         }
+        write(myLog, container, x);
         write(myLog, aCapo, strlen(aCapo));
+
+        for (int i = 0; i < x; i++) {
+            if (container[i] == '\0') {
+                inputs[inNum++] = &container[i + 1];
+                sprintf(sizz, "Size:%d", i);
+                write(myLog, sizz, strlen(sizz));
+                write(myLog, aCapo, strlen(aCapo));
+            }
+        }
+
+        for (int i = 0; i < sizeof inputs / sizeof inputs[0]; i++) {
+            write(myLog, inputs[i], strlen(inputs[i]));
+            write(myLog, aCapo, strlen(aCapo));
+        }
 
         /* command output size */
         sprintf(sizz, "Size:%zi", totSize);
