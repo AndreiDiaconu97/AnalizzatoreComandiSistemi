@@ -109,7 +109,8 @@ void showSettings(char settings[SET_N][2][PATH_S]) {
 }
 
 void loggerIsRunning(int *fdID, int *loggerID, char *loggerIDfile) {
-    char buffer[BUFF_S];
+    int pId_MaxLen = 10;
+    char buffer[pId_MaxLen];
 
     /* if loggerID file not found, create one and write new logger ID */
     *fdID = open(loggerIDfile, O_RDWR);
@@ -120,9 +121,9 @@ void loggerIsRunning(int *fdID, int *loggerID, char *loggerIDfile) {
             exit(EXIT_FAILURE);
         }
     } else {
-        if (read(*fdID, buffer, BUFF_S)) { //if file is not empty
+        if (read(*fdID, buffer, pId_MaxLen)) { //if file is not empty
             printf("Found existing logger ID\n");
-            read(*fdID, buffer, BUFF_S);
+            read(*fdID, buffer, pId_MaxLen);
             *loggerID = atoi(buffer);
         }
     }

@@ -1,24 +1,26 @@
 AnalizzatoreComandiSistemi:
   ☐ @critical Rename project folder to LABSO1-2017_2018--MAT01_MAT02_MAT03_MAT04
+  ☐ @today Fix buffers and char* sizes
   ☐ Clean code
   ☐ Comment code
   Here a TO-DO list for every file, based on folder hierarchy
   bin:
     ✔ ok @done(18-05-10 16:17)
   src:
-    ☐ @high check buffers when using all of them or more
+    ✔ @high check buffers when using all of them or more @done(18-05-12 19:01)
     logger.c:
       ☐ @low Choose if automatically delete fifo before closing
       ☐ @low Choose if automatically delete loggerPid.txt before closing
       ☐ @high  fix logger fifo
+      ☐ implement log formatting ("txt" and "csv")
     main.c:
       ✔ support '--command=value' format type arguments @done(18-05-10 17:27)
       ✘ support '-cmd value' format type arguments @cancelled(18-05-10 17:27)
       ☐ @high  use errno=errorCode and strerror in orderd to get error message from bash command finishing with echo $?
+      ☐ @critical implement commands
     myLibrary.h:
       ✔ ok @done(18-05-10 16:18)
     utility.c:
-    
   tmp:
     Check if every file is deleted after project is completed
     ☐ @low try to put fifo file here
