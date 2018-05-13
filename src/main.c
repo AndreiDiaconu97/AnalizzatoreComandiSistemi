@@ -42,9 +42,9 @@ int main(int argc, char *argv[]) {
     showSettings(settings);
 
     /* program variables */
-    int loggerID, fdID = 0;
+    int loggerID, shellID, fdID = 0;
     char loggerIDfile[PATH_S] = "loggerPid.txt";
-    char *buffer = malloc(sizeof(char) * buffS);
+    char buffer[BUFF_S];
 
     /* create FIFO file if needed */
     char *myFifo = "/tmp/myfifo";
@@ -52,13 +52,15 @@ int main(int argc, char *argv[]) {
         perror("FIFO");
     }
 
+    /**********************************************************/
+    /********************** LOGGER SETUP **********************/
+    /***************************************************+******/
     /* search for existing logger before any forking */
     loggerIsRunning(&fdID, &loggerID, loggerIDfile);
-
     /* fork for logger if no existing one is found */
     if (loggerID == 0) {
         if ((loggerID = fork()) < 0) {
-            perror("FORK result");
+            perror("logger fork() result");
             exit(EXIT_FAILURE);
         }
         if (loggerID == 0) {
@@ -79,13 +81,70 @@ int main(int argc, char *argv[]) {
         }
     }
 
+    /**********************************************************/
+    /********************** MAIN PROGRAM **********************/
+    /***************************************************+******/
+
+    // pipes for parent to write and read
+    int toChild[2];
+    int toParent[2];
+    pipe(toChild);
+    pipe(toParent);
+
+    if ((shellID = fork()) < 0) {
+        perror("shell fork() result");
+        exit(EXIT_FAILURE);
+    }
+    if (!shellID) {
+        char tmpCmd[100];
+        char *template[] = {"/bin/sh", "-c", tmpCmd, 0};
+        //char *returnStatus = "; echo ciao";
+
+        dup2(toParent[1], STDOUT_FILENO);
+        /* close pipes fds */
+        close(toChild[1]);
+        close(toParent[1]);
+        close(toParent[0]);
+
+        /* waiting input from pipe */
+        read(toChild[0], tmpCmd, sizeof tmpCmd);
+        //strcat(tmpCmd, returnStatus);
+        close(toChild[0]);
+
+        /* system shell invocation with given command */
+        execv(template[0], template);
+    } else {
+        printf("Father: %d\n", getpid());
+        printf("Logger ID: %d\n", loggerID);
+        int count;
+
+        /* close fds not required by parent */
+        close(toChild[0]);
+        close(toParent[1]);
+
+        // Write to child’s stdin
+        write(toChild[1], command, strlen(command) + 1);
+
+        // Read from child’s stdout
+        count = read(toParent[0], buffer, sizeof(buffer) - 1);
+        if (count >= 0) {
+            buffer[count] = '\0';
+            printf("%s", buffer);
+        } else {
+            printf("IO Error\n");
+        }
+
+        close(toChild[1]);
+        close(toParent[0]);
+    }
+
     /* father process */
+    /*
     printf("Father: %d\n", getpid());
     printf("Logger ID: %d\n", loggerID);
     char *prova = "zero";
     int fdFIFO;
 
-    //printf("If you read this means that child opened FIFO too.\n");
     sprintf(buffer, "%s; echo $?", command);
     FILE *fp = popen(buffer, "r");
 
@@ -102,6 +161,7 @@ int main(int argc, char *argv[]) {
     write(fdFIFO, "2", strlen("2") + 1);
 
     close(fdFIFO);
+    */
 
     /*
     printf("\nREADY:\n");
@@ -126,6 +186,6 @@ int main(int argc, char *argv[]) {
         close(fdFIFO);
     }
     */
-    free(buffer);
+    //free(buffer);
     return EXIT_SUCCESS;
 }
