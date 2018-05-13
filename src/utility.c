@@ -12,6 +12,7 @@
 
 void initSettings(char settings[SET_N][2][PATH_S]) {
     /* available settings */
+    strcpy(settings[shCmd][0], "command");
     strcpy(settings[outF][0], "outfile");
     strcpy(settings[errF][0], "errfile");
     strcpy(settings[logF][0], "logfile");
@@ -19,6 +20,7 @@ void initSettings(char settings[SET_N][2][PATH_S]) {
     strcpy(settings[code][0], "code");
 
     /* DEFAULT values */
+    strcpy(settings[shCmd][1], "");
     strcpy(settings[outF][1], "change this");
     strcpy(settings[errF][1], "change this");
     strcpy(settings[logF][1], "output.log");
@@ -31,39 +33,33 @@ void initSettings(char settings[SET_N][2][PATH_S]) {
  */
 bool readArguments(int argc, char **argv, char settings[SET_N][2][PATH_S]) {
     bool allValid = true;
-    bool argValid = true;
-    char tmpArg[PATH_S];
-    char tmpVal[PATH_S];
-    /* reading program arguments */
-    for (int i = 0; i < argc; i++) {
-        /* clean arrays before reading each argument */
-        strncpy(tmpArg, "", sizeof tmpArg);
-        strncpy(tmpVal, "", sizeof tmpVal);
+    char *tmpArg, *tmpVal;
 
-        /* find command arguments (commands begin with "--") */
-        if (!strncmp(argv[i], "-", 1)) {
-            /* Arguments are in form '--command=value',thus  */
-            /* finding the '=' gives the splitting point.    */
-            for (int t = 0; t < strlen(argv[i]); t++) {
-                /* get command */
-                if (argv[i][t] != '=') {
-                    tmpArg[strlen(tmpArg)] = argv[i][t];
-                    tmpArg[strlen(tmpArg)] = '\0';
-                } else {
-                    /* found the '=' char, now get value */
-                    for (int x = t + 1; x < strlen(argv[i]); x++) {
-                        tmpVal[strlen(tmpVal)] = argv[i][x];
-                        tmpVal[strlen(tmpVal)] = '\0';
-                    }
-                    break; /* exit form command loop too */
+    /* reading program arguments */
+    for (int i = 1; i < argc; i++) {
+        /* command argument found */
+        if (strncmp(argv[i], "-", 1) != 0) { 
+            strcpy(settings[shCmd][1], argv[i]);
+        } else { /* find setting arguments */
+            /* Arguments are in form '--setting=value',thus  */
+            /* finding the '=' char gives the splitting point.    */
+            tmpVal = strchr(argv[i], '=');
+            if (tmpVal == NULL) {
+                tmpVal = strchr(argv[i], ' ');
+                if (tmpVal == NULL) {
+                    printf("Separator not found\n");
+                    allValid = false;
                 }
             }
-            //printf("Arg:%s | Val:%s\n", tmpArg, tmpVal); //read check
-
-            argValid = evaluateCommand(settings, tmpArg, tmpVal);
-            if (allValid) { //result must stay false if only one argument is invalid
-                allValid = argValid;
+            if (allValid) {
+                tmpArg = argv[i];
+                tmpVal[0] = '\0';
+                tmpVal++;
+                allValid = evaluateCommand(settings, tmpArg, tmpVal);
             }
+        }
+        if (!allValid) {
+            break;
         }
     }
     return allValid;
@@ -87,7 +83,6 @@ bool evaluateCommand(char settings[SET_N][2][PATH_S], char *arg, char *val) {
             printf("Command '%s': couldn't parse value '%s'\n", arg, val);
             result = false;
         }
-
     } else if ((!strcmp(arg, "--code")) || (!strcmp(arg, "-c"))) {
         if ((!strcmp(val, "true")) || (!strcmp(val, "false"))) {
             strcpy(settings[code][1], val);

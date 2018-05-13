@@ -1,6 +1,5 @@
 AnalizzatoreComandiSistemi:
   ☐ @critical Rename project folder to LABSO1-2017_2018--MAT01_MAT02_MAT03_MAT04
-  ✔ @today Fix buffers and char* sizes @done(18-05-13 00:47)
   ☐ Clean code
   ☐ Comment code
   Here a TO-DO list for every file, based on folder hierarchy
@@ -8,14 +7,17 @@ AnalizzatoreComandiSistemi:
     ✔ ok @done(18-05-10 16:17)
   src:
     ✔ @high check buffers when using all of them or more @done(18-05-12 19:01)
+    ✔ @today Fix buffers and char* sizes @done(18-05-13 00:47)
+    ☐ use ENUMS instead of '#define MACRO x' for array indexes
     logger.c:
       ☐ @low Choose if automatically delete fifo before closing
       ☐ @low Choose if automatically delete loggerPid.txt before closing
       ✔ @high  fix logger fifo @done(18-05-13 00:47)
+      ☐ sometimes fifo fails
       ☐ implement log formatting ("txt" and "csv")
     main.c:
-      ✔ support '--command=value' format type arguments @done(18-05-10 17:27)
-      ✘ support '-cmd value' format type arguments @cancelled(18-05-10 17:27)
+      ✔ support --command=value format type arguments @done(18-05-10 17:27)
+      ✔ support "-cmd value" format type arguments @done(18-05-13 02:17)
       ☐ @high  use errno=errorCode and strerror in orderd to get error message from bash command finishing with echo $?
       ☐ @critical implement commands
     myLibrary.h:

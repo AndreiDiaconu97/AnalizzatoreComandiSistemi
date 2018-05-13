@@ -18,6 +18,7 @@ int main(int argc, char *argv[]) {
     initSettings(settings);
 
     /* mapping variables to settings-array */
+    char *command = settings[shCmd][1];
     char *outfile = settings[outF][1];
     char *errfile = settings[errF][1];
     char *logfile = settings[logF][1];
@@ -85,30 +86,46 @@ int main(int argc, char *argv[]) {
     int fdFIFO;
 
     //printf("If you read this means that child opened FIFO too.\n");
+    sprintf(buffer, "%s; echo $?", command);
+    FILE *fp = popen(buffer, "r");
+
+    fread(buffer, 1, BUFF_S, fp);
+    buffer[strlen(buffer) - 1] = '\0';
+
+    printf("%s\n", buffer);
+
+    kill(loggerID, SIGCONT);
+    fdFIFO = open(myFifo, O_WRONLY); //open one end of the pipe
+    write(fdFIFO, "TYPE", strlen("TYPE") + 1);
+    write(fdFIFO, command, strlen(command) + 1);
+    write(fdFIFO, buffer, strlen(buffer) + 1);
+    write(fdFIFO, "2", strlen("2") + 1);
+
+    close(fdFIFO);
+
+    /*
     printf("\nREADY:\n");
     while (strcmp(buffer, "quit") != 0) {
         printf(">>");
         getline(&buffer, &buffS, stdin);
         rmNewline(buffer);
 
-        kill(loggerID, SIGCONT);
-        fdFIFO = open(myFifo, O_WRONLY); //open one end of the pipe
-
         if (strcmp(buffer, "kill") == 0) {
             write(fdFIFO, buffer, strlen(buffer) + 1);
             kill(loggerID, SIGCONT);
         } else {
             //runCommand("ls", fdFIFO);
+            write(fdFIFO, "TYPE", strlen("TYPE") + 1);
+            write(fdFIFO, command, strlen(command) + 1);
             write(fdFIFO, buffer, strlen(buffer) + 1);
-            write(fdFIFO, "CONAD", strlen("CONAD") + 1);
             write(fdFIFO, "2", strlen("2") + 1);
-            write(fdFIFO, "data", strlen("data") + 1);
             //pause();
             //sleep(1);
             //write(fdFIFO, prova, sizeof prova);
         }
         close(fdFIFO);
     }
+    */
     free(buffer);
     return EXIT_SUCCESS;
 }

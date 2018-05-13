@@ -10,10 +10,13 @@
 #include <unistd.h>
 
 /* to use with char *inputs[4] */
-typedef enum input_format { CMD,
-                            DATA,
-                            OUT,
-                            OTHER } i_f;
+typedef enum input_format {
+    TYPE,
+    CMD,
+    DATA,
+    OUT,
+    OTHER
+} i_f;
 
 void logger(int argc, char *argv[]) {
     char buffer[BUFF_S];
@@ -31,24 +34,26 @@ void logger(int argc, char *argv[]) {
     /* open/create log file */
     int myLog = open(argv[0], O_WRONLY | O_APPEND | O_CREAT, 0777);
 
-    char *dStart = "Daemon started\n\n";
+    char *dStart = "Daemon started\n";
     write(myLog, dStart, strlen(dStart));
 
     ssize_t size;
-    while (strcmp(buffer, "kill")) {
+    while (1) {
         /* timestamp */
         write(myLog, separator, strlen(separator)); //SEP
         c_time_string = getcTime();
         write(myLog, c_time_string, strlen(c_time_string));
         write(myLog, separator, strlen(separator)); //SEP
 
-        /* read FIFO until open */
-        /*
-        while (size = read(myFifo, buffer, sizeof buffer)) {
-            // command
-        }
-        */
+        /* read data from fifo */
         size = read(myFifo, buffer, BUFF_S);
+
+        /* "kill" string quits the logger */
+        if (strcmp(buffer, "kill") == 0) {
+            break;
+        }
+
+        /* buffer overflow check */
         if ((read(myFifo, buffer, BUFF_S)) != 0) {
             write(myLog, separator, strlen(separator)); //SEP
             sprintf(ssize, "ERROR: fifo contained more than BUFF_S=%d chars", BUFF_S);
@@ -57,7 +62,6 @@ void logger(int argc, char *argv[]) {
             break;
         }
 
-        write(myLog, separator, strlen(separator)); //SEP
         sprintf(ssize, "SIZE: %zi", size);
         write(myLog, ssize, strlen(ssize));
         write(myLog, separator, strlen(separator)); //SEP
@@ -83,7 +87,7 @@ void logger(int argc, char *argv[]) {
         kill(getpid(), SIGSTOP);
     }
 
-    char *dEnd = "\nDaemon ended\n";
+    char *dEnd = "\nDaemon ended\n\n";
     write(myLog, dEnd, strlen(dEnd));
 
     /* TODO: choose if delete files after daemon dies */

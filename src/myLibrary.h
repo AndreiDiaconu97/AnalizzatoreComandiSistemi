@@ -8,17 +8,18 @@ typedef int bool;
 
 /* USER MACRO */
 #define PATH_S 512
-#define BUFF_S 50
+#define BUFF_S 124
 #define EXTNAME "../tmp/"
 //TODO(implement some MACROs)
 
 /* settings number and position */
-#define SET_N 5
-#define outF 0
-#define errF 1
-#define logF 2
-#define maxL 3
-#define code 4
+#define SET_N 6
+#define shCmd 0
+#define outF 1
+#define errF 2
+#define logF 3
+#define maxL 4
+#define code 5
 
 /* utility functions */
 void initSettings(char settings[SET_N][2][PATH_S]);
