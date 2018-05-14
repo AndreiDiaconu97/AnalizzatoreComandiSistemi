@@ -8,7 +8,6 @@ AnalizzatoreComandiSistemi:
     logger.c:
       ☐ @low Choose if automatically delete fifo before closing
       ☐ @low Choose if automatically delete loggerPid.txt before closing
-      ☐ @high check why sometimes fifo buffer goes in overflow
       ☐ implement log formatting ("txt" and "csv")
     main.c:
       ☐ @high  use errno=errorCode and strerror in orderd to get error message from bash command finishing with echo $?
@@ -33,6 +32,8 @@ Archive:
   ✔ @high  fix logger fifo @done(18-05-13 00:47) 
   ✔ support --command=value format type arguments @done(18-05-10 17:27)
   ✔ support "-cmd value" format type arguments @done(18-05-13 02:17)
+  ✔ @high check why sometimes fifo buffer goes in overflow @done(18-05-14 18:30) (had to write everything on buffer before SIGCONT)
+
 
 
 //////////////////////////////////////////////////////////////////////////////////

@@ -38,7 +38,7 @@ bool readArguments(int argc, char **argv, char settings[SET_N][2][PATH_S]) {
     /* reading program arguments */
     for (int i = 1; i < argc; i++) {
         /* command argument found */
-        if (strncmp(argv[i], "-", 1) != 0) { 
+        if (strncmp(argv[i], "-", 1) != 0) {
             strcpy(settings[shCmd][1], argv[i]);
         } else { /* find setting arguments */
             /* Arguments are in form '--setting=value',thus  */
@@ -144,11 +144,10 @@ void runCommand(char *cmd, int fd) {
     pclose(fp);
 }
 
-void removeFifo(char *fifoPath) {
-    char rmFifo[PATH_S] = "";
-    strcat(rmFifo, "rm ");
-    strcat(rmFifo, fifoPath);
-    system(rmFifo);
+void removeFile(char *filePath) {
+    char rmFile[PATH_S] = "rm ";
+    strcat(rmFile, filePath);
+    system(rmFile);
 }
 
 char *getcTime() {

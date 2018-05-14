@@ -18,81 +18,88 @@ typedef enum input_format {
     OTHER
 } i_f;
 
-void logger(int argc, char *argv[]) {
-    char buffer[BUFF_S];
-    char *separator = "\n-----------------------\n";
-    char *aCapo = "\n";
-    char *c_time_string;
-    char ssize[80];
+char *loggerIDfile;
+char *fifoPipe;
+void usr1_handler(int sig) {
+    removeFile(loggerIDfile);
+    removeFile(fifoPipe);
+    exit(EXIT_SUCCESS);
+}
 
+void logger(char *argv[]) {
+    /// initialization ///
+    loggerIDfile = argv[1];
+    fifoPipe = argv[2];
+    /* logger is closed with a custom signal handler */
+    signal(SIGUSR1, usr1_handler);
+
+    /* allocations needed */
+    ssize_t count;
+    char buffer[BUFF_S];
+    char *c_time_string;
     int inNum = 4;
     char *inputs[inNum];
 
     /* open FIFO from reading side */
     int myFifo = open(argv[2], O_RDONLY);
 
-    /* open/create log file */
+    /* open/create log file and move pipe to stdout */
     int myLog = open(argv[0], O_WRONLY | O_APPEND | O_CREAT, 0777);
+    dup2(myLog, STDOUT_FILENO);
+    close(myLog);
 
-    char *dStart = "Daemon started\n";
-    write(myLog, dStart, strlen(dStart));
-
-    ssize_t size;
+    /// actual program ///
+    printf("---------------------------------------------------\n");
     while (1) {
-        /* timestamp */
-        write(myLog, separator, strlen(separator)); //SEP
-        c_time_string = getcTime();
-        write(myLog, c_time_string, strlen(c_time_string));
-        write(myLog, separator, strlen(separator)); //SEP
-
         /* read data from fifo */
-        size = read(myFifo, buffer, BUFF_S);
-
-        /* "kill" string quits the logger */
-        if (strcmp(buffer, "kill") == 0) {
-            break;
-        }
+        count = read(myFifo, buffer, BUFF_S);
 
         /* buffer overflow check */
-        if ((read(myFifo, buffer, BUFF_S)) != 0) {
-            write(myLog, separator, strlen(separator)); //SEP
-            sprintf(ssize, "ERROR: fifo contained more than BUFF_S=%d chars", BUFF_S);
-            write(myLog, ssize, strlen(ssize));
-            write(myLog, separator, strlen(separator)); //SEP
+        if (read(myFifo, buffer, BUFF_S)) {
+            printf("ERROR: fifo contained more than BUFF_S=%d chars", BUFF_S);
             break;
         }
 
-        sprintf(ssize, "SIZE: %zi", size);
-        write(myLog, ssize, strlen(ssize));
-        write(myLog, separator, strlen(separator)); //SEP
+        printf("SIZE: %zibyte\n", count);
 
         /* get every input data from last buffer */
         int inTmp = 0;
         inputs[inTmp++] = buffer;
-        for (int i = 0; i < size; i++) {
+        for (int i = 0; i < count; i++) {
             if (buffer[i] == '\0') {
                 inputs[inTmp++] = &buffer[i + 1];
             }
         }
 
-        /* print every input data */
+        /* ID */
+        printf("ID:\t\t\t%s\n", "1.1.1");
+
+        /* original command */
+        printf("COMMAND:\t%s\n", "blablabla");
+
+        /* subcommand */
+        printf("SUBCOMMAND:\t%s\n", "blab");
+
+        /* timestamp */
+        c_time_string = getcTime();
+        printf("%s\n", c_time_string);
+
+        /* command output */
+        printf("OUTPUT:\n\n");
         for (int i = 0; i < inNum; i++) {
-            write(myLog, inputs[i], strlen(inputs[i]));
-            write(myLog, aCapo, strlen(aCapo));
+            printf("%s\n", inputs[i]);
         }
+        printf("\n");
+
+        /* return code */
+        printf("RETURN CODE: %s\n", "prova");
+        printf("---------------------------------------------------\n");
 
         /* pause mode after getting data */
-        /* processes can check if logger is in */
-        /* pause mode in order to send data safely */
+        /**
+        * Processes can check if logger is in 
+        * pause mode in order to send data safely 
+        **/
         kill(getpid(), SIGSTOP);
     }
-
-    char *dEnd = "\nDaemon ended\n\n";
-    write(myLog, dEnd, strlen(dEnd));
-
-    /* TODO: choose if delete files after daemon dies */
-    removeFifo(argv[1]);
-    removeFifo(argv[2]);
-    close(myLog);
-    close(myFifo);
 }

@@ -9,6 +9,7 @@ typedef int bool;
 /* USER MACRO */
 #define PATH_S 512
 #define BUFF_S 512
+#define OUT_S 124 //how much text to save on log
 #define EXTNAME "../tmp/"
 //TODO(implement some MACROs)
 
@@ -28,11 +29,11 @@ bool evaluateCommand(char settings[SET_N][2][PATH_S], char *arg, char *val);
 void showSettings(char settings[SET_N][2][PATH_S]);
 void loggerIsRunning(int *fdID, int *loggerID, char *loggerIDfile);
 void runCommand(char *cmd, int fd);
-void removeFifo(char *fifoPath);
+void removeFile(char *filePath);
 char *getcTime();
 void rmNewline(char *str);
 
 /* logger-starting function */
-void logger(int argc, char *argv[]);
+void logger(char *argv[]);
 
 #endif
