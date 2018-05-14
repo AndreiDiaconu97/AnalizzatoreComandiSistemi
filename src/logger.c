@@ -56,11 +56,11 @@ void logger(char *argv[]) {
 
         /* buffer overflow check */
         if (read(myFifo, buffer, BUFF_S)) {
-            printf("ERROR: fifo contained more than BUFF_S=%d chars", BUFF_S);
-            break;
+            printf("ERROR: fifo contained more than BUFF_S=%d chars\n", BUFF_S);
+            kill(getpid(), SIGUSR1);
         }
 
-        printf("SIZE: %zibyte\n", count);
+        //printf("SIZE:\t\t%zibyte\n", count);
 
         /* get every input data from last buffer */
         int inTmp = 0;
@@ -75,7 +75,7 @@ void logger(char *argv[]) {
         printf("ID:\t\t\t%s\n", "1.1.1");
 
         /* original command */
-        printf("COMMAND:\t%s\n", "blablabla");
+        printf("COMMAND:\t%s\n", inputs[1]);
 
         /* subcommand */
         printf("SUBCOMMAND:\t%s\n", "blab");
@@ -85,14 +85,10 @@ void logger(char *argv[]) {
         printf("%s\n", c_time_string);
 
         /* command output */
-        printf("OUTPUT:\n\n");
-        for (int i = 0; i < inNum; i++) {
-            printf("%s\n", inputs[i]);
-        }
-        printf("\n");
+        printf("OUTPUT:\n\n%s\n\n", inputs[2]);
 
         /* return code */
-        printf("RETURN CODE: %s\n", "prova");
+        printf("RETURN CODE: %s\n", inputs[3]);
         printf("---------------------------------------------------\n");
 
         /* pause mode after getting data */

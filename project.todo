@@ -4,14 +4,22 @@ AnalizzatoreComandiSistemi:
   ☐ Comment code
   Here a TO-DO list for every file, based on folder hierarchy
   src:
-    ☐ use ENUMS instead of '#define MACRO x' for array indexes
+    ☐ @low use ENUMS instead of MACRO for array indexes
     logger.c:
-      ☐ @low Choose if automatically delete fifo before closing
-      ☐ @low Choose if automatically delete loggerPid.txt before closing
       ☐ implement log formatting ("txt" and "csv")
+      ☐ @high check rare cases for buffer overflow
     main.c:
-      ☐ @high  use errno=errorCode and strerror in orderd to get error message from bash command finishing with echo $?
-      ☐ @critical implement commands
+      ☐ allocate multipe strings instead of one buffer?
+      ☐ "kill" is only a temporary command for debugging, delete ir finally
+      settings:
+        ☐ improve settings with useful properties
+        ☐ maybe can save settings?
+      commands:
+        ☐ @today use maxLen to limit command output
+        ☐ implement subcommands output
+        ☐ @high support special symbols for subcommand detection (&&, ||, <, >, |, ;)
+      logger-sending:
+        ☐ other processes should check for and wait their turn if logger is occupied
     myLibrary.h:
       ✔ ok @done(18-05-10 16:18)
     utility.c:
@@ -33,7 +41,8 @@ Archive:
   ✔ support --command=value format type arguments @done(18-05-10 17:27)
   ✔ support "-cmd value" format type arguments @done(18-05-13 02:17)
   ✔ @high check why sometimes fifo buffer goes in overflow @done(18-05-14 18:30) (had to write everything on buffer before SIGCONT)
-
+  ✔ @low Choose if automatically delete fifo before closing @done(18-05-14 21:11)
+  ✔ @low Choose if automatically delete loggerPid.txt before closing @done(18-05-14 21:11)
 
 
 //////////////////////////////////////////////////////////////////////////////////

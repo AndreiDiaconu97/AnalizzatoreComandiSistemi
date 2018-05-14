@@ -57,6 +57,7 @@ int main(int argc, char *argv[]) {
     /***************************************************+******/
     /* search for existing logger before any forking */
     loggerIsRunning(&fdID, &loggerID, loggerIDfile);
+
     /* fork for logger if no existing one is found */
     if (loggerID == 0) {
         if ((loggerID = fork()) < 0) {
@@ -85,22 +86,27 @@ int main(int argc, char *argv[]) {
     /********************** MAIN PROGRAM **********************/
     /***************************************************+******/
 
+    /* 'kill' special command check */
+    if (!strcmp(command, "kill")) {
+        if (open(loggerIDfile, O_RDWR) == -1) {
+            printf("No logger to kill!\n");
+            exit(EXIT_FAILURE);
+        } else {
+            int fdFIFO = open(myFifo, O_WRONLY); //open one end of the pipe
+            kill(loggerID, SIGUSR1);
+            kill(loggerID, SIGCONT);
+            waitpid(loggerID, NULL, 0);
+            printf("Daemon killed\n");
+            close(fdFIFO);
+            exit(EXIT_SUCCESS);
+        }
+    }
+
     // pipes for parent to write and read
     int toChild[2];
     int toParent[2];
     pipe(toChild);
     pipe(toParent);
-
-    /* closes logger with customm SIGUSR1 */
-    if (!strcmp(command, "kill")) {
-        int fdFIFO = open(myFifo, O_WRONLY); //open one end of the pipe
-        kill(loggerID, SIGUSR1);
-        kill(loggerID, SIGCONT);
-        waitpid(loggerID, NULL, 0);
-        printf("Daemon killed\n");
-        close(fdFIFO);
-        exit(EXIT_SUCCESS);
-    }
 
     if ((shellID = fork()) < 0) {
         perror("shell fork() result");
@@ -110,6 +116,7 @@ int main(int argc, char *argv[]) {
         char tmpCmd[100];
         char *template[] = {"/bin/sh", "-c", tmpCmd, 0};
         char *returnStatus = "; echo $?";
+        /* CAREFUL!: $? returns exit code of LAST command */
 
         dup2(toParent[1], STDOUT_FILENO);
         dup2(toParent[1], STDERR_FILENO);
@@ -138,13 +145,13 @@ int main(int argc, char *argv[]) {
         close(toChild[0]);
         close(toParent[1]);
 
-        // Write to child’s stdin
+        /* write to child’s stdin */
         write(toChild[1], command, strlen(command) + 1);
 
-        /*wait for child to read from pipe and generate output */
+        /* wait for child to read from pipe and generate output */
         wait(NULL);
 
-        // Read from child’s stdout
+        /* read from child’s stdout */
         count = read(toParent[0], outBuff, OUT_S - 1);
         if (count < 0) {
             perror("IO Error\n");
@@ -152,6 +159,7 @@ int main(int argc, char *argv[]) {
         } else if (count == OUT_S - 1) {
             outBuff[OUT_S - 1] = '\0';
         }
+
         /* splitting stderr output from stdout */
         outBuff[count] = '\0';
         outBuff[strlen(outBuff) - 1] = '\0';
@@ -159,22 +167,19 @@ int main(int argc, char *argv[]) {
         *errCode = '\0';
         errCode++;
 
-        /* data printf() test */
+        /* error description from error code */
         errDesc = strerror(atoi(errCode));
-        printf("%s\n", errCode);
-        printf("ERR:%s\n", errCode);
-        printf("DESC:%s\n", errDesc);
 
         close(toChild[1]);
         close(toParent[0]);
 
-        int fdFIFO = open(myFifo, O_WRONLY); //open one end of the pipe
+        /* sending data to logger */
+        int fdFIFO = open(myFifo, O_WRONLY);
         write(fdFIFO, "TYPE", strlen("TYPE") + 1);
         write(fdFIFO, command, strlen(command) + 1);
         write(fdFIFO, outBuff, strlen(outBuff) + 1);
         write(fdFIFO, errCode, strlen(errCode) + 1);
         kill(loggerID, SIGCONT);
-
         close(fdFIFO);
     }
 
