@@ -96,7 +96,7 @@ int main(int argc, char *argv[]) {
 
     if (!shellID) {
         char tmpCmd[100];
-        char *template[] = {"/bin/sh", "-c", tmpCmd, 0};
+        char *template[] = {"sh", "-c", tmpCmd, 0};
         char *returnStatus = "; echo $?";
         /* CAREFUL!: $? returns exit code of LAST command */
 
@@ -114,7 +114,7 @@ int main(int argc, char *argv[]) {
         //close(STDERR_FILENO);
 
         /* system shell invocation with given command */
-        execv(template[0], template);
+        execvp(template[0], template);
     } else {
         int count;
         char outBuff[sett.maxOut];
@@ -136,7 +136,7 @@ int main(int argc, char *argv[]) {
         if (count < 0) {
             perror("IO Error\n");
             exit(EXIT_FAILURE);
-        } else if (count == sett.maxOut - 1) { /* checki this code */
+        } else if (count == sett.maxOut - 1) { /* check this code */
             rmNewline(outBuff);
         }
         outBuff[count] = '\0';
@@ -154,7 +154,7 @@ int main(int argc, char *argv[]) {
         int fdFIFO = open(myFifo, O_WRONLY);
         write(fdFIFO, "TYPE", strlen("TYPE") + 1);
         write(fdFIFO, sett.cmd, strlen(sett.cmd) + 1);
-        write(fdFIFO, outBuff, strlen(outBuff) + 1);
+        write(fdFIFO, outBuff, sett.maxOut + 1);
         write(fdFIFO, retCode, strlen(retCode) + 1);
         kill(loggerID, SIGCONT);
         close(fdFIFO);

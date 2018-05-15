@@ -10,6 +10,7 @@ typedef int bool;
 #define PATH_S 512
 #define CMD_S 124 /* given command max length */
 #define OUT_S 124 /* how much of the command output to save on log */
+#define MAX_OUT_s 2048 /* if command output is bigger than that return code briks */
 
 #define EXTNAME "../tmp/"
 
