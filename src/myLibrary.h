@@ -23,18 +23,20 @@ typedef struct settings {
     bool code;
 } settings;
 
-/* utility functions */
+/* argumentsUtility.c */
 void initSettings(settings *s);
 bool readArguments(int argc, char **argv, settings *s);
 bool evaluateCommand(settings *s, char *arg, char *val);
 void showSettings(settings *s);
+
+/* utility.c */
 void loggerIsRunning(int *fdID, int *loggerID, char *loggerIDfile);
 char *cmdOutSplitReturnCode(char *outBuff, char *retCode);
 void removeFile(char *filePath);
 char *getcTime();
 void rmNewline(char *str);
 
-/* logger-starting function */
+/* logger.c */
 void logger(char *argv[]);
 
 #endif

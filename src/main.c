@@ -136,8 +136,8 @@ int main(int argc, char *argv[]) {
         if (count < 0) {
             perror("IO Error\n");
             exit(EXIT_FAILURE);
-        } else if (count == OUT_S - 1) {
-            outBuff[OUT_S - 1] = '\0';
+        } else if (count == sett.maxOut - 1) { /* checki this code */
+            rmNewline(outBuff);
         }
         outBuff[count] = '\0';
 
