@@ -14,44 +14,28 @@
 
 int main(int argc, char *argv[]) {
     /* user-settings container */
-    char settings[SET_N][2][PATH_S];
-    initSettings(settings);
-
-    /* mapping variables to settings-array */
-    char *command = settings[shCmd][1];
-    char *outfile = settings[outF][1];
-    char *errfile = settings[errF][1];
-    char *logfile = settings[logF][1];
-    /* non char* variables don't auto-update */
-    size_t buffS;
-    bool returnCode;
+    settings sett;
+    initSettings(&sett);
 
     /* read and check user arguments */
-    if (!readArguments(argc, argv, settings)) {
+    if (!readArguments(argc, argv, &sett)) {
         printf("CLOSING PROGRAM\n");
         exit(EXIT_FAILURE);
-    } else {
-        buffS = (size_t)atoi(settings[maxL][1]);
-        if (!(strcmp(settings[code][1], "true"))) {
-            returnCode = true;
-        } else {
-            returnCode = false;
-        }
     }
+    showSettings(&sett);
 
-    showSettings(settings);
+    printf("COMMAND: %s\n", sett.cmd);
 
     /* program variables */
-    int loggerID, shellID, fdID = 0;
+    int loggerID=0, shellID, fdID;
     char loggerIDfile[PATH_S] = "loggerPid.txt";
-    char buffer[BUFF_S];
+    char buffer[sett.maxBuff];
 
     /* create FIFO file if needed */
     char *myFifo = "/tmp/myfifo";
     if (mkfifo(myFifo, 0666)) {
         perror("FIFO");
     }
-
     /**********************************************************/
     /********************** LOGGER SETUP **********************/
     /***************************************************+******/
@@ -68,7 +52,7 @@ int main(int argc, char *argv[]) {
             /* logger must be leader of its own group in order to be a daemon */
             setsid();
             //printf("Child:%d\n", getpid());
-            char *args[3] = {logfile, loggerIDfile, myFifo};
+            char *args[3] = {sett.logF, loggerIDfile, myFifo};
             logger(args); //logger process
             exit(EXIT_SUCCESS);
         } else {
@@ -87,19 +71,14 @@ int main(int argc, char *argv[]) {
     /***************************************************+******/
 
     /* 'kill' special command check */
-    if (!strcmp(command, "kill")) {
-        if (open(loggerIDfile, O_RDWR) == -1) {
-            printf("No logger to kill!\n");
-            exit(EXIT_FAILURE);
-        } else {
-            int fdFIFO = open(myFifo, O_WRONLY); //open one end of the pipe
-            kill(loggerID, SIGUSR1);
-            kill(loggerID, SIGCONT);
-            waitpid(loggerID, NULL, 0);
-            printf("Daemon killed\n");
-            close(fdFIFO);
-            exit(EXIT_SUCCESS);
-        }
+    if (!strcmp(sett.cmd, "kill")) {
+        int fdFIFO = open(myFifo, O_WRONLY); //open one end of the pipe
+        kill(loggerID, SIGUSR1);
+        kill(loggerID, SIGCONT);
+        waitpid(loggerID, NULL, 0);
+        close(fdFIFO);
+        printf("Daemon killed\n");
+        exit(EXIT_SUCCESS);
     }
 
     // pipes for parent to write and read
@@ -112,6 +91,7 @@ int main(int argc, char *argv[]) {
         perror("shell fork() result");
         exit(EXIT_FAILURE);
     }
+
     if (!shellID) {
         char tmpCmd[100];
         char *template[] = {"/bin/sh", "-c", tmpCmd, 0};
@@ -137,7 +117,7 @@ int main(int argc, char *argv[]) {
         printf("Father: %d\n", getpid());
         printf("Logger ID: %d\n", loggerID);
         int count;
-        char outBuff[OUT_S];
+        char outBuff[sett.maxOut];
         char *errCode;
         char *errDesc;
 
@@ -146,19 +126,20 @@ int main(int argc, char *argv[]) {
         close(toParent[1]);
 
         /* write to child’s stdin */
-        write(toChild[1], command, strlen(command) + 1);
+        write(toChild[1], sett.cmd, strlen(sett.cmd) + 1);
 
         /* wait for child to read from pipe and generate output */
         wait(NULL);
 
         /* read from child’s stdout */
-        count = read(toParent[0], outBuff, OUT_S - 1);
+        count = read(toParent[0], outBuff, sett.maxOut - 1);
         if (count < 0) {
             perror("IO Error\n");
             exit(EXIT_FAILURE);
         } else if (count == OUT_S - 1) {
             outBuff[OUT_S - 1] = '\0';
         }
+        printf("HAS READ\n");
 
         /* splitting stderr output from stdout */
         outBuff[count] = '\0';
@@ -173,12 +154,14 @@ int main(int argc, char *argv[]) {
         close(toChild[1]);
         close(toParent[0]);
 
+        printf("WRITING\n");
         /* sending data to logger */
         int fdFIFO = open(myFifo, O_WRONLY);
         write(fdFIFO, "TYPE", strlen("TYPE") + 1);
-        write(fdFIFO, command, strlen(command) + 1);
+        write(fdFIFO, sett.cmd, strlen(sett.cmd) + 1);
         write(fdFIFO, outBuff, strlen(outBuff) + 1);
         write(fdFIFO, errCode, strlen(errCode) + 1);
+        printf("HAS WRITTENn");
         kill(loggerID, SIGCONT);
         close(fdFIFO);
     }

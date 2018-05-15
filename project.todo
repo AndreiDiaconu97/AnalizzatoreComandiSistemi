@@ -9,7 +9,7 @@ AnalizzatoreComandiSistemi:
       ☐ implement log formatting ("txt" and "csv")
       ☐ @high check rare cases for buffer overflow
     main.c:
-      ☐ allocate multipe strings instead of one buffer?
+      ☐ allocate multiple strings instead of one buffer?
       ☐ "kill" is only a temporary command for debugging, delete ir finally
       settings:
         ☐ improve settings with useful properties

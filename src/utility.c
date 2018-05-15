@@ -10,28 +10,22 @@
 #include <time.h>
 #include <unistd.h>
 
-void initSettings(char settings[SET_N][2][PATH_S]) {
-    /* available settings */
-    strcpy(settings[shCmd][0], "command");
-    strcpy(settings[outF][0], "outfile");
-    strcpy(settings[errF][0], "errfile");
-    strcpy(settings[logF][0], "logfile");
-    strcpy(settings[maxL][0], "maxLen");
-    strcpy(settings[code][0], "code");
+void initSettings(settings *s) {
+    s->code = true;
+    s->maxCmd = CMD_S;
+    s->maxOut = OUT_S;
+    s->maxBuff = s->maxCmd + s->maxOut + 50; /* temporary size */
 
-    /* DEFAULT values */
-    strcpy(settings[shCmd][1], "");
-    strcpy(settings[outF][1], "change this");
-    strcpy(settings[errF][1], "change this");
-    strcpy(settings[logF][1], "output.log");
-    sprintf(settings[maxL][1], "%d", BUFF_S);
-    strcpy(settings[code][1], "true");
+    char *logfile = malloc(sizeof(char) * PATH_S);
+    char *command = malloc(sizeof(char) * CMD_S);
+    strcpy(logfile, "commands.log");
+    strcpy(command, "");
+    s->logF = logfile;
+    s->cmd = command;
 }
 
-/**
- * must return true
- */
-bool readArguments(int argc, char **argv, char settings[SET_N][2][PATH_S]) {
+/* must return true */
+bool readArguments(int argc, char **argv, settings *s) {
     bool allValid = true;
     char *tmpArg, *tmpVal;
 
@@ -39,7 +33,7 @@ bool readArguments(int argc, char **argv, char settings[SET_N][2][PATH_S]) {
     for (int i = 1; i < argc; i++) {
         /* command argument found */
         if (strncmp(argv[i], "-", 1) != 0) {
-            strcpy(settings[shCmd][1], argv[i]);
+            strcpy(s->cmd, argv[i]);
         } else { /* find setting arguments */
             /* Arguments are in form '--setting=value',thus  */
             /* finding the '=' char gives the splitting point.    */
@@ -55,37 +49,56 @@ bool readArguments(int argc, char **argv, char settings[SET_N][2][PATH_S]) {
                 tmpArg = argv[i];
                 tmpVal[0] = '\0';
                 tmpVal++;
-                allValid = evaluateCommand(settings, tmpArg, tmpVal);
+                allValid = evaluateCommand(s, tmpArg, tmpVal);
             }
         }
         if (!allValid) {
             break;
         }
     }
+    s->maxBuff = s->maxCmd + s->maxOut + 50; /* adjust buffer size */
     return allValid;
 }
 
-bool evaluateCommand(char settings[SET_N][2][PATH_S], char *arg, char *val) {
+bool evaluateCommand(settings *s, char *arg, char *val) {
     bool result = true;
-    if ((!strcmp(arg, "--outfile")) || (!strcmp(arg, "-o"))) {
-        strcpy(settings[outF][1], val);
-    } else if ((!strcmp(arg, "--errfile")) || (!strcmp(arg, "-e"))) {
-        strcpy(settings[errF][1], val);
-    } else if ((!strcmp(arg, "--logfile")) || (!strcmp(arg, "-l"))) {
-        strcpy(settings[logF][1], val);
-    } else if ((!strcmp(arg, "--maxLen")) || (!strcmp(arg, "-m"))) {
+    if ((!strcmp(arg, "--logfile")) || (!strcmp(arg, "-l"))) {
+        strcpy(s->logF, val);
+    } else if ((!strcmp(arg, "--maxCmd")) || (!strcmp(arg, "-mC"))) {
         if (!strncmp(val, "-", 1)) {
             printf("Command '%s': invalid negative number\n", arg);
             result = false;
-        } else if ((atoi(val))) { //checking for integer value
-            strcpy(settings[maxL][1], val);
+        } else if (atoi(val)) { //checking for integer value
+            s->maxCmd = atoi(val);
+        } else {
+            printf("Command '%s': couldn't parse value '%s'\n", arg, val);
+            result = false;
+        }
+    } else if ((!strcmp(arg, "--maxOutput")) || (!strcmp(arg, "-mO"))) {
+        if (!strncmp(val, "-", 1)) {
+            printf("Command '%s': invalid negative number\n", arg);
+            result = false;
+        } else if (atoi(val)) { //checking for integer value
+            s->maxOut = atoi(val);
+        } else {
+            printf("Command '%s': couldn't parse value '%s'\n", arg, val);
+            result = false;
+        }
+    } else if ((!strcmp(arg, "--maxBuffer")) || (!strcmp(arg, "-mB"))) {
+        if (!strncmp(val, "-", 1)) {
+            printf("Command '%s': invalid negative number\n", arg);
+            result = false;
+        } else if (atoi(val)) { //checking for integer value
+            s->maxBuff = atoi(val);
         } else {
             printf("Command '%s': couldn't parse value '%s'\n", arg, val);
             result = false;
         }
     } else if ((!strcmp(arg, "--code")) || (!strcmp(arg, "-c"))) {
-        if ((!strcmp(val, "true")) || (!strcmp(val, "false"))) {
-            strcpy(settings[code][1], val);
+        if (!strcmp(val, "true")) {
+            s->code = true;
+        } else if (!strcmp(val, "false")) {
+            s->code = false;
         } else {
             printf("Argument:%s - Invalid input:%s\n", arg, val);
             result = false;
@@ -97,11 +110,12 @@ bool evaluateCommand(char settings[SET_N][2][PATH_S], char *arg, char *val) {
     return result;
 }
 
-void showSettings(char settings[SET_N][2][PATH_S]) {
+void showSettings(settings *s) {
     printf("--- SETTINGS ---------------------------\n");
-    for (int i = 0; i < 5; i++) {
-        printf("%d) %s: %s\n", i, settings[i][0], settings[i][1]);
-    }
+    printf("logfile: %s\n", s->logF);
+    printf("return code: %s\n", s->code ? "true" : "false");
+    printf("command max length: %d\n", s->maxCmd);
+    printf("output max length: %d\n", s->maxOut);
     printf("----------------------------------------\n\n");
 }
 
@@ -124,24 +138,6 @@ void loggerIsRunning(int *fdID, int *loggerID, char *loggerIDfile) {
             *loggerID = atoi(buffer);
         }
     }
-}
-
-void runCommand(char *cmd, int fd) {
-    FILE *fp;
-    char buffer[PATH_S];
-
-    /* Open the command for reading. */
-    fp = popen(cmd, "r");
-    if (fp == NULL) {
-        printf("Failed to run command\n");
-        exit(1);
-    }
-    /* Read the output a line at a time - output it. */
-    while (fgets(buffer, sizeof(buffer) - 1, fp) != NULL) {
-        //printf("%s", buffer);
-        write(fd, buffer, strlen(buffer));
-    }
-    pclose(fp);
 }
 
 void removeFile(char *filePath) {

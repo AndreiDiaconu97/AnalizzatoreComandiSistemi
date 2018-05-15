@@ -9,15 +9,6 @@
 #include <syslog.h>
 #include <unistd.h>
 
-/* to use with char *inputs[4] */
-typedef enum input_format {
-    TYPE,
-    CMD,
-    DATA,
-    OUT,
-    OTHER
-} i_f;
-
 char *loggerIDfile;
 char *fifoPipe;
 void usr1_handler(int sig) {
@@ -35,7 +26,7 @@ void logger(char *argv[]) {
 
     /* allocations needed */
     ssize_t count;
-    char buffer[BUFF_S];
+    char buffer[500];
     char *c_time_string;
     int inNum = 4;
     char *inputs[inNum];
@@ -51,12 +42,14 @@ void logger(char *argv[]) {
     /// actual program ///
     printf("---------------------------------------------------\n");
     while (1) {
+        kill(getpid(), SIGSTOP);
+
         /* read data from fifo */
-        count = read(myFifo, buffer, BUFF_S);
+        count = read(myFifo, buffer, 500);
 
         /* buffer overflow check */
-        if (read(myFifo, buffer, BUFF_S)) {
-            printf("ERROR: fifo contained more than BUFF_S=%d chars\n", BUFF_S);
+        if (read(myFifo, buffer, 500)) {
+            printf("ERROR: fifo contained more than buffer capacity: %d chars\n", 500);
             kill(getpid(), SIGUSR1);
         }
 
@@ -96,6 +89,5 @@ void logger(char *argv[]) {
         * Processes can check if logger is in 
         * pause mode in order to send data safely 
         **/
-        kill(getpid(), SIGSTOP);
     }
 }
