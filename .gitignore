@@ -3,4 +3,4 @@
 /log/
 *.txt
 *.log
-.vscode/launch.json
+*.json

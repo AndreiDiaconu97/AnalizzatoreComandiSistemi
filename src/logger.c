@@ -85,9 +85,6 @@ void logger(char *argv[]) {
         printf("---------------------------------------------------\n");
 
         /* pause mode after getting data */
-        /**
-        * Processes can check if logger is in 
-        * pause mode in order to send data safely 
-        **/
+        /* Processes can check if logger is in pause mode in order to send data safely */ 
     }
 }

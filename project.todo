@@ -4,22 +4,21 @@ AnalizzatoreComandiSistemi:
   ☐ Comment code
   Here a TO-DO list for every file, based on folder hierarchy
   src:
-    ☐ @low use ENUMS instead of MACRO for array indexes
     logger.c:
       ☐ implement log formatting ("txt" and "csv")
-      ☐ @high check rare cases for buffer overflow
+      ✔ @high check rare cases for buffer overflow @done(18-05-15 22:52)
     main.c:
-      ☐ allocate multiple strings instead of one buffer?
-      ☐ "kill" is only a temporary command for debugging, delete ir finally
       settings:
+        ☐ @high check why loggerID must be initialised
         ☐ improve settings with useful properties
         ☐ maybe can save settings?
       commands:
-        ☐ @today use maxLen to limit command output
+        ✔ @today use maxLen to limit command output @done(18-05-15 22:50)
         ☐ implement subcommands output
         ☐ @high support special symbols for subcommand detection (&&, ||, <, >, |, ;)
       logger-sending:
-        ☐ other processes should check for and wait their turn if logger is occupied
+        @NB popen() causes broken fifo with commands s.a. "ls" because pclose() is called and there is no time for output on pipe
+        ☐ choose programs-logger concurrency ? single string per program : additional SIG handler for logger availability
     myLibrary.h:
       ✔ ok @done(18-05-10 16:18)
     utility.c:

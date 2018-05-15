@@ -24,10 +24,10 @@ int main(int argc, char *argv[]) {
     }
     showSettings(&sett);
 
-    printf("COMMAND: %s\n", sett.cmd);
-
-    /* program variables */
-    int loggerID = 0, shellID, fdID;
+    /* some program variables */
+    int fdID;
+    int loggerID = 0;
+    int shellID;
     char loggerIDfile[PATH_S] = "loggerPid.txt";
     char buffer[sett.maxBuff];
 
@@ -84,80 +84,46 @@ int main(int argc, char *argv[]) {
         exit(EXIT_SUCCESS);
     }
 
-    int toChild[2];
-    int toParent[2];
-    pipe(toChild);
-    pipe(toParent);
+    char retCode[3];
+    char outBuff[sett.maxOut];
+    char trashBuff[100];
 
-    if ((shellID = fork()) < 0) {
-        perror("shell fork() result");
+    FILE *fp = popen(sett.cmd, "r");
+    if (fp == NULL) {
+        perror("popen");
         exit(EXIT_FAILURE);
     }
 
-    if (!shellID) {
-        char tmpCmd[100];
-        char *template[] = {"sh", "-c", tmpCmd, 0};
-        char *returnStatus = "; echo $?";
-        /* CAREFUL!: $? returns exit code of LAST command */
-
-        dup2(toParent[1], STDOUT_FILENO);
-        dup2(toParent[1], STDERR_FILENO);
-        /* close pipes fds */
-        close(toChild[1]);
-        close(toParent[1]);
-        close(toParent[0]);
-
-        /* waiting input from pipe */
-        read(toChild[0], tmpCmd, sizeof tmpCmd);
-        strcat(tmpCmd, returnStatus);
-        close(toChild[0]);
-        //close(STDERR_FILENO);
-
-        /* system shell invocation with given command */
-        execvp(template[0], template);
-    } else {
-        int count;
-        char outBuff[sett.maxOut];
-        char *retCode;
-        char *errDesc;
-
-        /* close fds not required by parent */
-        close(toChild[0]);
-        close(toParent[1]);
-
-        /* write to child’s stdin */
-        write(toChild[1], sett.cmd, strlen(sett.cmd) + 1);
-
-        /* wait for child to read from pipe and generate output */
-        wait(NULL);
-
-        /* read from child’s stdout */
-        count = read(toParent[0], outBuff, sett.maxOut - 1);
-        if (count < 0) {
-            perror("IO Error\n");
-            exit(EXIT_FAILURE);
-        } else if (count == sett.maxOut - 1) { /* check this code */
-            rmNewline(outBuff);
-        }
-        outBuff[count] = '\0';
-
-        /* split command output from return code */
-        retCode = cmdOutSplitReturnCode(outBuff, retCode);
-
-        /* error description from error code */
-        //errDesc = strerror(atoi(retCode));
-
-        close(toChild[1]);
-        close(toParent[0]);
-
-        /* sending data to logger */
-        int fdFIFO = open(myFifo, O_WRONLY);
-        write(fdFIFO, "TYPE", strlen("TYPE") + 1);
-        write(fdFIFO, sett.cmd, strlen(sett.cmd) + 1);
-        write(fdFIFO, outBuff, sett.maxOut + 1);
-        write(fdFIFO, retCode, strlen(retCode) + 1);
-        kill(loggerID, SIGCONT);
-        close(fdFIFO);
+    size_t len = fread(outBuff, sizeof(char), sett.maxOut - 1, fp);
+    if (!len) {
+        perror("reading output from FILE*");
+        exit(EXIT_FAILURE);
     }
+
+    /* limiting reading to outBuff size */
+    if (len == sett.maxOut - 1) {
+        outBuff[len] = '\0';
+    } else { /* ending char is a '\n' */
+        outBuff[len - 1] = '\0';
+    }
+
+    /* emptying pipe in order to be sure it is not used anymore */
+    while (fread(trashBuff, sizeof(char), sizeof(trashBuff), fp)) {
+        /** removing this cycle causes broken pipe error if pclose(fp) completes
+         * before given command fully writes the output on pipe */
+    }
+
+    int tmpCode = WEXITSTATUS(pclose(fp));
+    sprintf(retCode, "%d", tmpCode);
+
+    /* sending data to logger */
+    int fdFIFO = open(myFifo, O_WRONLY);
+    write(fdFIFO, "TYPE", strlen("TYPE") + 1);
+    write(fdFIFO, sett.cmd, strlen(sett.cmd) + 1);
+    write(fdFIFO, outBuff, strlen(outBuff) + 1);
+    write(fdFIFO, retCode, strlen(retCode) + 1);
+    kill(loggerID, SIGCONT);
+    close(fdFIFO);
+
     return EXIT_SUCCESS;
 }
