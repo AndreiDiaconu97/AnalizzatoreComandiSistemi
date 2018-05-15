@@ -140,6 +140,13 @@ void loggerIsRunning(int *fdID, int *loggerID, char *loggerIDfile) {
     }
 }
 
+char *cmdOutSplitReturnCode(char *outBuff, char *retCode) {
+    outBuff[strlen(outBuff) - 1] = '\0'; /* replace ending '\n' with '\0' */
+    retCode = strrchr(outBuff, '\n');    /* return code is placed after actual last '\n' */
+    *retCode = '\0';                     /* separate command output from return code */
+    return ++retCode;
+}
+
 void removeFile(char *filePath) {
     char rmFile[PATH_S] = "rm ";
     strcat(rmFile, filePath);

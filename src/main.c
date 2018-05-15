@@ -27,18 +27,18 @@ int main(int argc, char *argv[]) {
     printf("COMMAND: %s\n", sett.cmd);
 
     /* program variables */
-    int loggerID=0, shellID, fdID;
+    int loggerID = 0, shellID, fdID;
     char loggerIDfile[PATH_S] = "loggerPid.txt";
     char buffer[sett.maxBuff];
 
-    /* create FIFO file if needed */
+    /* create FIFO file if it does not exist */
     char *myFifo = "/tmp/myfifo";
-    if (mkfifo(myFifo, 0666)) {
-        perror("FIFO");
-    }
-    /**********************************************************/
-    /********************** LOGGER SETUP **********************/
-    /***************************************************+******/
+    mkfifo(myFifo, 0666);
+
+    /******************************************************************************/
+    /******************************** LOGGER SETUP ********************************/
+    /******************************************************************************/
+
     /* search for existing logger before any forking */
     loggerIsRunning(&fdID, &loggerID, loggerIDfile);
 
@@ -51,26 +51,29 @@ int main(int argc, char *argv[]) {
         if (loggerID == 0) {
             /* logger must be leader of its own group in order to be a daemon */
             setsid();
-            //printf("Child:%d\n", getpid());
+
+            /* logger call with appropriate arguments */
             char *args[3] = {sett.logF, loggerIDfile, myFifo};
-            logger(args); //logger process
+            logger(args);
             exit(EXIT_SUCCESS);
         } else {
             /* if there is not logger found save childID on file */
             printf("Saving actual logger ID\n");
             sprintf(buffer, "%d", loggerID);
-            if (write(fdID, buffer, strlen(buffer)) == -1) { //writing actual running logger ID
+            if (write(fdID, buffer, strlen(buffer)) == -1) {
                 perror("Saving result");
             }
             close(fdID);
         }
     }
 
-    /**********************************************************/
-    /********************** MAIN PROGRAM **********************/
-    /***************************************************+******/
+    /******************************************************************************/
+    /********************************* MAIN PROGRAM *******************************/
+    /******************************************************************************/
+    printf("Father: %d\n", getpid());
+    printf("Logger ID: %d\n", loggerID);
 
-    /* 'kill' special command check */
+    /* 'kill' special command check (only for debugging) */
     if (!strcmp(sett.cmd, "kill")) {
         int fdFIFO = open(myFifo, O_WRONLY); //open one end of the pipe
         kill(loggerID, SIGUSR1);
@@ -81,7 +84,6 @@ int main(int argc, char *argv[]) {
         exit(EXIT_SUCCESS);
     }
 
-    // pipes for parent to write and read
     int toChild[2];
     int toParent[2];
     pipe(toChild);
@@ -114,11 +116,9 @@ int main(int argc, char *argv[]) {
         /* system shell invocation with given command */
         execv(template[0], template);
     } else {
-        printf("Father: %d\n", getpid());
-        printf("Logger ID: %d\n", loggerID);
         int count;
         char outBuff[sett.maxOut];
-        char *errCode;
+        char *retCode;
         char *errDesc;
 
         /* close fds not required by parent */
@@ -139,81 +139,25 @@ int main(int argc, char *argv[]) {
         } else if (count == OUT_S - 1) {
             outBuff[OUT_S - 1] = '\0';
         }
-        printf("HAS READ\n");
-
-        /* splitting stderr output from stdout */
         outBuff[count] = '\0';
-        outBuff[strlen(outBuff) - 1] = '\0';
-        errCode = strrchr(outBuff, '\n');
-        *errCode = '\0';
-        errCode++;
+
+        /* split command output from return code */
+        retCode = cmdOutSplitReturnCode(outBuff, retCode);
 
         /* error description from error code */
-        errDesc = strerror(atoi(errCode));
+        //errDesc = strerror(atoi(retCode));
 
         close(toChild[1]);
         close(toParent[0]);
 
-        printf("WRITING\n");
         /* sending data to logger */
         int fdFIFO = open(myFifo, O_WRONLY);
         write(fdFIFO, "TYPE", strlen("TYPE") + 1);
         write(fdFIFO, sett.cmd, strlen(sett.cmd) + 1);
         write(fdFIFO, outBuff, strlen(outBuff) + 1);
-        write(fdFIFO, errCode, strlen(errCode) + 1);
-        printf("HAS WRITTENn");
+        write(fdFIFO, retCode, strlen(retCode) + 1);
         kill(loggerID, SIGCONT);
         close(fdFIFO);
     }
-
-    /* father process */
-    /*
-    printf("Father: %d\n", getpid());
-    printf("Logger ID: %d\n", loggerID);
-    char *prova = "zero";
-    int fdFIFO;
-
-    sprintf(buffer, "%s; echo $?", command);
-    FILE *fp = popen(buffer, "r");
-
-    fread(buffer, 1, BUFF_S, fp);
-    buffer[strlen(buffer) - 1] = '\0';
-
-    printf("%s\n", buffer);
-
-    kill(loggerID, SIGCONT);
-    fdFIFO = open(myFifo, O_WRONLY); //open one end of the pipe
-    write(fdFIFO, "TYPE", strlen("TYPE") + 1);
-    write(fdFIFO, command, strlen(command) + 1);
-    write(fdFIFO, buffer, strlen(buffer) + 1);
-    write(fdFIFO, "2", strlen("2") + 1);
-
-    close(fdFIFO);
-    */
-
-    /*
-    printf("\nREADY:\n");
-    while (strcmp(buffer, "quit") != 0) {
-        printf(">>");
-        getline(&buffer, &buffS, stdin);
-        rmNewline(buffer);
-
-        if (strcmp(buffer, "kill") == 0) {
-            write(fdFIFO, buffer, strlen(buffer) + 1);
-            kill(loggerID, SIGCONT);
-        } else {
-            //runCommand("ls", fdFIFO);
-            write(fdFIFO, "TYPE", strlen("TYPE") + 1);
-            write(fdFIFO, command, strlen(command) + 1);
-            write(fdFIFO, buffer, strlen(buffer) + 1);
-            write(fdFIFO, "2", strlen("2") + 1);
-            //pause();
-            //sleep(1);
-            //write(fdFIFO, prova, sizeof prova);
-        }
-        close(fdFIFO);
-    }
-    */
-    //free(buffer);
     return EXIT_SUCCESS;
 }
