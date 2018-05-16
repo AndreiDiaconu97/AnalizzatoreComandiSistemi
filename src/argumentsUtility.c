@@ -9,7 +9,7 @@
 #include <syslog.h>
 #include <time.h>
 #include <unistd.h>
-// test
+// test2
 
 void initSettings(settings *s) {
     s->code = true;
