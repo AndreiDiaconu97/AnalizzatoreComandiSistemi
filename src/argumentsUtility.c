@@ -9,6 +9,7 @@
 #include <syslog.h>
 #include <time.h>
 #include <unistd.h>
+// test
 
 void initSettings(settings *s) {
     s->code = true;
