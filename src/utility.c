@@ -16,18 +16,17 @@ void executeCommand(int toShell, int fromShell, char *command, char retCode[3], 
 
     /* writing phase */
     write(toShell, command, strlen(command));
-
     //kill(shellID, SIGCONT);
+    
     /* reading phase */
     count = read(fromShell, outBuff, buffSize);
-    printf("RD:%d\n", count);
     //waitpid(-1, NULL, WUNTRACED);
     if (count >= buffSize) {
         printf("Reading from Shell: buffer is too small\nClosing...\n");
         exit(EXIT_FAILURE);
     }
-    outBuff[count] = '\0';
-    printf("%s-------------------\n", outBuff);
+    outBuff[count - 1] = '\0';
+    printf("%s\n-------------------\n", outBuff);
 }
 
 void removeFile(char *filePath) {

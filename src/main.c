@@ -162,6 +162,10 @@ int main(int argc, char *argv[]) {
     strcat(subCmd, "\n");
     executeCommand(toShell, fromShell, subCmd, retCode, outBuff, sizeof outBuff, shellID);
 
+    strcpy(subCmd, "echo \"\"");
+    strcat(subCmd, "\n");
+    executeCommand(toShell, fromShell, subCmd, retCode, outBuff, sizeof outBuff, shellID);
+
     close(fromShell);
     close(toShell);
     kill(shellID, SIGCONT);
