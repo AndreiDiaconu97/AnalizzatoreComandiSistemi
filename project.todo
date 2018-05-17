@@ -6,14 +6,14 @@ AnalizzatoreComandiSistemi:
   src:
     logger.c:
       ☐ implement log formatting ("txt" and "csv")
-      ✔ @high check rare cases for buffer overflow @done(18-05-15 22:52)
+      
     main.c:
       settings:
         ☐ @high check why loggerID must be initialised
         ☐ improve settings with useful properties
         ☐ maybe can save settings?
+        ☐ open shell once, get output for every command and subcommand, use echo "output" @started(18-05-16 18:48)
       commands:
-        ✔ @today use maxLen to limit command output @done(18-05-15 22:50)
         ☐ implement subcommands output
         ☐ @high support special symbols for subcommand detection (&&, ||, <, >, |, ;)
       logger-sending:
@@ -42,6 +42,9 @@ Archive:
   ✔ @high check why sometimes fifo buffer goes in overflow @done(18-05-14 18:30) (had to write everything on buffer before SIGCONT)
   ✔ @low Choose if automatically delete fifo before closing @done(18-05-14 21:11)
   ✔ @low Choose if automatically delete loggerPid.txt before closing @done(18-05-14 21:11)
+  ✔ @high check rare cases for buffer overflow @done(18-05-15 22:52)
+  ✔ @today use maxLen to limit command output @done(18-05-15 22:50)
+
 
 
 //////////////////////////////////////////////////////////////////////////////////

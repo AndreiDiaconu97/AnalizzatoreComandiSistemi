@@ -5,6 +5,7 @@ CC := gcc
 SRC := src
 BIN := bin
 TMP := /tmp/temp
+CFLAGS := -std=gnu90
 
 exec := run
 srcs := $(wildcard $(SRC)/*.c) # source files
@@ -49,6 +50,6 @@ $(BIN) $(TMP):
 	@echo "Folder '$@' created."
 
 $(TMP)/%.o : $(SRC)/%.c $(deps)
-	@$(CC) -o $@ -c $<
+	@$(CC) $(CFLAGS) -o $@ -c $<
 	@echo "./$@ updated"
 
