@@ -6,15 +6,28 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <sys/wait.h>
 #include <syslog.h>
 #include <time.h>
 #include <unistd.h>
 
-char *cmdOutSplitReturnCode(char *outBuff, char *retCode) {
-    rmNewline(outBuff);               /* replace ending '\n' with '\0' */
-    retCode = strrchr(outBuff, '\n'); /* return code is placed after actual last '\n' */
-    *retCode = '\0';                  /* separate command output from return code */
-    return ++retCode;
+void executeCommand(int toShell, int fromShell, char *command, char retCode[3], char *outBuff, int buffSize, int shellID) {
+    int count = 1;
+
+    /* writing phase */
+    write(toShell, command, strlen(command));
+
+    //kill(shellID, SIGCONT);
+    /* reading phase */
+    count = read(fromShell, outBuff, buffSize);
+    printf("RD:%d\n", count);
+    //waitpid(-1, NULL, WUNTRACED);
+    if (count >= buffSize) {
+        printf("Reading from Shell: buffer is too small\nClosing...\n");
+        exit(EXIT_FAILURE);
+    }
+    outBuff[count] = '\0';
+    printf("%s-------------------\n", outBuff);
 }
 
 void removeFile(char *filePath) {

@@ -6,7 +6,6 @@ AnalizzatoreComandiSistemi:
   src:
     logger.c:
       ☐ implement log formatting ("txt" and "csv")
-      
     main.c:
       settings:
         ☐ @high check why loggerID must be initialised

@@ -10,10 +10,12 @@ typedef int bool;
 #define PATH_S 512
 #define CMD_S 124      /* given command max length */
 #define OUT_S 124      /* how much of the command output to save on log */
-#define MAX_OUT_s 2048 /* if command output is bigger than that return code briks */
+#define MAX_OUT_S 2048 /* if command output is bigger than that return code briks */
 
 #define LOG_PID_F "loggerPid.txt"
-#define EXTNAME "../tmp/"
+#define LOGGER_FIFO "/tmp/temp/loggerFifo"
+#define TO_SHELL_FIFO "/tmp/temp/toShellFifo"
+#define FROM_SHELL_FIFO "/tmp/temp/fromShellFifo"
 
 /* settings container */
 typedef struct settings {
@@ -32,7 +34,7 @@ bool evaluateCommand(settings *s, char *arg, char *val);
 void showSettings(settings *s);
 
 /* utility.c */
-char *cmdOutSplitReturnCode(char *outBuff, char *retCode);
+void executeCommand(int toShell, int fromShell, char *command, char retCode[3], char *outBuff, int buffSize, int shellID);
 void removeFile(char *filePath);
 char *getcTime();
 void rmNewline(char *str);

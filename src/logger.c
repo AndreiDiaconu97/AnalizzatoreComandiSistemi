@@ -32,7 +32,7 @@ void logger(char *argv[]) {
     char *inputs[inNum];
 
     /* open FIFO from reading side */
-    int myFifo = open(argv[2], O_RDONLY);
+    int myFifo = open(fifoPipe, O_RDONLY);
 
     /* open/create log file and move pipe to stdout */
     int myLog = open(argv[0], O_WRONLY | O_APPEND | O_CREAT, 0777);

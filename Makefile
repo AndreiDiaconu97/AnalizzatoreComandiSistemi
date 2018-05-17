@@ -34,9 +34,10 @@ help h:
 	@echo "(relative path must include the name of the element itself)"
 
 clean c:
-	@rm -f $(BIN)/$(exec) $(objs)
+	@rm -f $(BIN)/$(exec) $(TMP)/* #$(objs) specialised alternative	(careful about foreign files)
 	@rmdir $(BIN) $(TMP)
 	@echo "Project cleaned"
+	
 
 build b: $(BIN)/$(exec)
 
@@ -53,3 +54,20 @@ $(TMP)/%.o : $(SRC)/%.c $(deps)
 	@$(CC) $(CFLAGS) -o $@ -c $<
 	@echo "./$@ updated"
 
+##################
+### CLEAN INFO ###
+################################################################################################################################ \
+rm -rf /path/to/directory \
+	To remove the folder with all its contents(including all interior folders): \
+\
+rm -rf /path/to/directory/* \
+	To remove all the contents of the folder(including all interior folders) but not the folder itself: \
+\
+rm -f /path/to/directory/* \
+	To remove all the "files" from inside a folder(not removing interior folders): \
+\
+Where: \
+	rm - stands for "remove" \
+	-f - stands for "force" which is helpful when you don't want to be asked/prompted if you want to remove an archive, for example. \
+	-r - stands for "recursive" which means that you want to go recursively down every folder and remove everything. \
+################################################################################################################################ \
