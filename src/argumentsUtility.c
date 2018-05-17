@@ -31,7 +31,8 @@ bool readArguments(int argc, char **argv, settings *s) {
     char *tmpArg, *tmpVal;
 
     /* reading program arguments */
-    for (int i = 1; i < argc; i++) {
+    int i;
+    for (i = 1; i < argc; i++) {
         /* command argument found */
         if (strncmp(argv[i], "-", 1) != 0) {
             strcpy(s->cmd, argv[i]);

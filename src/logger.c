@@ -28,7 +28,7 @@ void logger(char *argv[]) {
     ssize_t count;
     char buffer[500];
     char *c_time_string;
-    int inNum = 4;
+    int inNum = 5;
     char *inputs[inNum];
 
     /* open FIFO from reading side */
@@ -58,33 +58,37 @@ void logger(char *argv[]) {
         /* get every input data from last buffer */
         int inTmp = 0;
         inputs[inTmp++] = buffer;
-        for (int i = 0; i < count; i++) {
+        int i;
+        for (i = 0; i < count; i++) {
             if (buffer[i] == '\0') {
                 inputs[inTmp++] = &buffer[i + 1];
             }
         }
 
         /* ID */
-        printf("ID:\t\t\t%s\n", "1.1.1");
+        printf("ID:\t\t%s\n", "1.1.1");
+
+        /* message type */
+        printf("TYPE:\t\t%s\n", inputs[0]);
 
         /* original command */
         printf("COMMAND:\t%s\n", inputs[1]);
 
         /* subcommand */
-        printf("SUBCOMMAND:\t%s\n", "blab");
+        printf("SUBCOMMAND:\t%s\n", inputs[2]);
 
         /* timestamp */
         c_time_string = getcTime();
-        printf("%s\n", c_time_string);
+        printf("DATE:\t\t%s\n", c_time_string);
 
         /* command output */
-        printf("OUTPUT:\n\n%s\n\n", inputs[2]);
+        printf("OUTPUT:\n\n%s\n\n", inputs[3]);
 
         /* return code */
-        printf("RETURN CODE: %s\n", inputs[3]);
+        printf("RETURN CODE: %s\n", inputs[4]);
         printf("---------------------------------------------------\n");
 
         /* pause mode after getting data */
-        /* Processes can check if logger is in pause mode in order to send data safely */ 
+        /* Processes can check if logger is in pause mode in order to send data safely */
     }
 }

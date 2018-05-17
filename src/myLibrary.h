@@ -8,10 +8,11 @@ typedef int bool;
 
 /* MACRO for string lenghts */
 #define PATH_S 512
-#define CMD_S 124 /* given command max length */
-#define OUT_S 124 /* how much of the command output to save on log */
+#define CMD_S 124      /* given command max length */
+#define OUT_S 124      /* how much of the command output to save on log */
 #define MAX_OUT_s 2048 /* if command output is bigger than that return code briks */
 
+#define LOG_PID_F "loggerPid.txt"
 #define EXTNAME "../tmp/"
 
 /* settings container */
@@ -31,7 +32,6 @@ bool evaluateCommand(settings *s, char *arg, char *val);
 void showSettings(settings *s);
 
 /* utility.c */
-void loggerIsRunning(int *fdID, int *loggerID, char *loggerIDfile);
 char *cmdOutSplitReturnCode(char *outBuff, char *retCode);
 void removeFile(char *filePath);
 char *getcTime();

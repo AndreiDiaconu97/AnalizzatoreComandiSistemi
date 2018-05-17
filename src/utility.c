@@ -10,27 +10,6 @@
 #include <time.h>
 #include <unistd.h>
 
-void loggerIsRunning(int *fdID, int *loggerID, char *loggerIDfile) {
-    int pId_MaxLen = 10;
-    char buffer[pId_MaxLen];
-
-    /* if loggerID file not found, create one and write new logger ID */
-    *fdID = open(loggerIDfile, O_RDWR);
-    if (*fdID == -1) {
-        perror("Opening logger ID file");
-        if ((*fdID = open(loggerIDfile, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR)) == -1) {
-            perror("Creating file");
-            exit(EXIT_FAILURE);
-        }
-    } else {
-        if (read(*fdID, buffer, pId_MaxLen)) { //if file is not empty
-            printf("Found existing logger ID\n");
-            read(*fdID, buffer, pId_MaxLen);
-            *loggerID = atoi(buffer);
-        }
-    }
-}
-
 char *cmdOutSplitReturnCode(char *outBuff, char *retCode) {
     rmNewline(outBuff);               /* replace ending '\n' with '\0' */
     retCode = strrchr(outBuff, '\n'); /* return code is placed after actual last '\n' */
