@@ -11,22 +11,33 @@
 #include <time.h>
 #include <unistd.h>
 
-void executeCommand(int toShell, int fromShell, char *command, char retCode[3], char *outBuff, int buffSize, int shellID) {
+void executeCommand(int toShell, int fromShell, Pk *data, bool piping) {
     int count = 1;
+    char tmp[32]; //temporary size
+    sprintf(tmp, "; echo $?; kill -18 %d\n", getpid());
 
-    /* writing phase */
-    write(toShell, command, strlen(command));
-    //kill(shellID, SIGCONT);
-    
-    /* reading phase */
-    count = read(fromShell, outBuff, buffSize);
-    //waitpid(-1, NULL, WUNTRACED);
-    if (count >= buffSize) {
+    /* write, then wait for shell to output everything on fifo */
+    if (piping) {
+        write(toShell, "echo \"", strlen("echo \""));
+        write(toShell, data->out, strlen(data->out));
+        write(toShell, "\"|", strlen("\"|"));
+    }
+    write(toShell, data->cmd, strlen(data->cmd));
+    write(toShell, tmp, strlen(tmp));
+    kill(getpid(), SIGSTOP);
+
+    /* reading from fifo */
+    count = read(fromShell, data->out, PK_O);
+    if (count >= PK_O) {
         printf("Reading from Shell: buffer is too small\nClosing...\n");
         exit(EXIT_FAILURE);
     }
-    outBuff[count - 1] = '\0';
-    printf("%s\n-------------------\n", outBuff);
+    data->out[count - 1] = '\0';
+
+    /* retrieving return code from output + splitting */
+    char *tmpReturn = strrchr(data->out, '\n');
+    *tmpReturn = '\0';
+    strcpy(data->returnC, tmpReturn + 1);
 }
 
 void removeFile(char *filePath) {

@@ -102,7 +102,7 @@ int main(int argc, char *argv[]) {
     /******************************************************************************/
     /********************************* SHELL SETUP ********************************/
     /******************************************************************************/
-    unlink(TO_SHELL_FIFO);
+    unlink(TO_SHELL_FIFO); // USE PIPE //
     unlink(FROM_SHELL_FIFO);
     mkfifo(TO_SHELL_FIFO, 0777);
     mkfifo(FROM_SHELL_FIFO, 0777);
@@ -126,7 +126,7 @@ int main(int argc, char *argv[]) {
         close(toShell);
         close(fromShell);
 
-        char *arguments[2] = {"sh", 0};
+        char *arguments[] = {"sh", 0};
         execvp(arguments[0], arguments);
         perror("shell process");
         exit(EXIT_FAILURE);
@@ -136,41 +136,37 @@ int main(int argc, char *argv[]) {
     /********************************* MAIN PROGRAM *******************************/
     /******************************************************************************/
 
-    char outBuff[MAX_OUT_S];
-    char subCmd[sett.maxCmd];
-    char trashBuff[100];
-    char retCode[3];
-    int cmdLen = strlen(sett.cmd);
-
     printf("Father: %d\n", getpid());
     printf("Logger ID: %d\n", loggerID);
     printf("ShellID: %d\n", shellID);
 
     toShell = open(TO_SHELL_FIFO, O_WRONLY);
     fromShell = open(FROM_SHELL_FIFO, O_RDONLY);
-    //kill(shellID,SIGSTOP);
+    Pk data;
 
-    strcpy(subCmd, sett.cmd);
-    strcat(subCmd, "\n");
-    executeCommand(toShell, fromShell, subCmd, retCode, outBuff, sizeof outBuff, shellID);
+    strcpy(data.cmd, "cd awffwan");
+    executeCommand(toShell, fromShell, &data, false);
+    printf("COMMAND:\t%s\n", data.cmd);
+    printf("OUTPUT:\t\t%s\n", data.out);
+    printf("RETURN C.:\t%s\n\n", data.returnC);
 
-    strcpy(subCmd, "echo $?");
-    strcat(subCmd, "\n");
-    executeCommand(toShell, fromShell, subCmd, retCode, outBuff, sizeof outBuff, shellID);
+    strcpy(data.cmd, "wc");
+    executeCommand(toShell, fromShell, &data, true);
+    printf("COMMAND:\t%s\n", data.cmd);
+    printf("OUTPUT:\t\t%s\n", data.out);
+    printf("RETURN C.:\t%s\n\n", data.returnC);
 
-    strcpy(subCmd, "pwd");
-    strcat(subCmd, "\n");
-    executeCommand(toShell, fromShell, subCmd, retCode, outBuff, sizeof outBuff, shellID);
-
-    strcpy(subCmd, "echo \"\"");
-    strcat(subCmd, "\n");
-    executeCommand(toShell, fromShell, subCmd, retCode, outBuff, sizeof outBuff, shellID);
+    strcpy(data.cmd, "pwd");
+    executeCommand(toShell, fromShell, &data, true);
+    printf("COMMAND:\t%s\n", data.cmd);
+    printf("OUTPUT:\t\t%s\n", data.out);
+    printf("RETURN C.:\t%s\n\n", data.returnC);
 
     close(fromShell);
     close(toShell);
-    kill(shellID, SIGCONT);
+    unlink(TO_SHELL_FIFO);
+    unlink(FROM_SHELL_FIFO);
     waitpid(shellID, NULL, 0); /* NEED ERROR CHECKING HERE */
-
     /* sending data to logger */
     /*
     fdFIFO = open(myFifo, O_WRONLY);
@@ -182,8 +178,5 @@ int main(int argc, char *argv[]) {
     kill(loggerID, SIGCONT);
     close(fdFIFO);
     */
-
-    unlink(TO_SHELL_FIFO);
-    unlink(FROM_SHELL_FIFO);
     return EXIT_SUCCESS;
 }
