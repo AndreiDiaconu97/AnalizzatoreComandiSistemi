@@ -12,13 +12,7 @@
 #include <time.h>      //not used
 #include <unistd.h>
 
-void segmentcpy(char *dst, char *src, int from, int to) {
-    int len = to - from;
-    int x;
-    for (x = 0; x <= len; x++) {
-        dst[x] = src[x + from];
-    }
-    dst[len + 1] = '\0';
+void unpauser(int sig) {
 }
 
 int main(int argc, char *argv[]) {
@@ -49,9 +43,9 @@ int main(int argc, char *argv[]) {
     if (pidFD == -1) {
         needNew = true;
     } else {
-        char buffer[10];
-        read(pidFD, buffer, sizeof buffer);
-        loggerID = atoi(buffer);
+        char logIDbuffer[10];
+        read(pidFD, logIDbuffer, sizeof logIDbuffer);
+        loggerID = atoi(logIDbuffer);
         if (getpgid(loggerID) < 0) {
             needNew = true;
         } else {
@@ -97,13 +91,13 @@ int main(int argc, char *argv[]) {
 
     /* 'kill' special command check */
     if (!strcmp(sett.cmd, "kill")) {
-        int fdFIFO = open(LOGGER_FIFO, O_WRONLY);
+        int loggerFd = open(LOGGER_FIFO, O_WRONLY);
 
         kill(loggerID, SIGUSR1);
         kill(loggerID, SIGCONT);
         waitpid(loggerID, NULL, 0);
 
-        close(fdFIFO);
+        close(loggerFd);
         printf("Daemon killed\n");
         exit(EXIT_SUCCESS);
     }
@@ -125,6 +119,7 @@ int main(int argc, char *argv[]) {
     }
     if (shellID == 0) {
         //setsid();
+        //signal (SIGHUP, SIG_IGN);
         toShell = open(TO_SHELL_FIFO, O_RDONLY);
         fromShell = open(FROM_SHELL_FIFO, O_WRONLY);
 
@@ -151,34 +146,38 @@ int main(int argc, char *argv[]) {
 
     toShell = open(TO_SHELL_FIFO, O_WRONLY);
     fromShell = open(FROM_SHELL_FIFO, O_RDONLY);
+    signal(SIGUSR1, unpauser);
+    int loggerFd;
     Pk data;
+    strcpy(data.origCmd, sett.cmd);
 
-    printf("COMMD: %s\n", sett.cmd);
+    printf("origCmd: %s\n", data.origCmd);
 
     int i = 0;
     int f = 0;
     bool lastIsPipe = false;
-    for (f = 0; f <= strlen(sett.cmd); f++) { // pwd; ls'\0'
-        if ((sett.cmd[f] == ';') || (sett.cmd[f] == '\0')) {
-            segmentcpy(data.cmd, sett.cmd, i, f - 1);
-            printf("DATA: %s\n", data.cmd);
+    for (f = 0; f <= strlen(data.origCmd); f++) { // pwd; ls'\0'
+        switch (data.origCmd[f]) {
+        case '\0':
+        case ';':
+            segmentcpy(data.cmd, data.origCmd, i, f - 1);
             executeCommand(toShell, fromShell, &data, lastIsPipe);
+            sendData(&data, loggerID);
+            i = f + 1;
             lastIsPipe = false;
-            i = f + 1;
-            printf("COMMAND:\t%s\n", data.cmd);
-            printf("OUTPUT:\t\t%s\n", data.out);
-            printf("RETURN C.:\t%s\n\n", data.returnC);
-        } else if (sett.cmd[f] == '|') {
-            segmentcpy(data.cmd, sett.cmd, i, f - 1);
+            break;
+        case '|':
+            segmentcpy(data.cmd, data.origCmd, i, f - 1);
             executeCommand(toShell, fromShell, &data, lastIsPipe);
-            lastIsPipe = true;
+            sendData(&data, loggerID);
             i = f + 1;
-            printf("COMMAND:\t%s\n", data.cmd);
-            printf("OUTPUT:\t\t%s\n", data.out);
-            printf("RETURN C.:\t%s\n\n", data.returnC);
+            lastIsPipe = true;
+            break;
+        default:
+            break;
         }
     }
-    printf("FINISHED\n");
+    //printf("FINISHED\n");
 
     // strcpy(data.cmd, "cd awffwan");
     // executeCommand(toShell, fromShell, &data, false);
@@ -186,33 +185,13 @@ int main(int argc, char *argv[]) {
     // printf("OUTPUT:\t\t%s\n", data.out);
     // printf("RETURN C.:\t%s\n\n", data.returnC);
 
-    // strcpy(data.cmd, "wc");
-    // executeCommand(toShell, fromShell, &data, true);
-    // printf("COMMAND:\t%s\n", data.cmd);
-    // printf("OUTPUT:\t\t%s\n", data.out);
-    // printf("RETURN C.:\t%s\n\n", data.returnC);
-
-    // strcpy(data.cmd, "pwd");
-    // executeCommand(toShell, fromShell, &data, true);
-    // printf("COMMAND:\t%s\n", data.cmd);
-    // printf("OUTPUT:\t\t%s\n", data.out);
-    // printf("RETURN C.:\t%s\n\n", data.returnC);
-
+    printf("FINISHED\n");
+    //write(toShell, "exit\n", strlen("exit\n"));
     close(fromShell);
     close(toShell);
     unlink(TO_SHELL_FIFO);
     unlink(FROM_SHELL_FIFO);
     waitpid(shellID, NULL, 0); /* NEED ERROR CHECKING HERE */
-    /* sending data to logger */
-    /*
-    fdFIFO = open(myFifo, O_WRONLY);
-    write(fdFIFO, "TYPE", strlen("TYPE") + 1);
-    write(fdFIFO, sett.cmd, strlen(sett.cmd) + 1);
-    write(fdFIFO, sett.cmd, strlen(sett.cmd) + 1);
-    write(fdFIFO, outBuff, strlen(outBuff) + 1);
-    write(fdFIFO, retCode, strlen(retCode) + 1);
-    kill(loggerID, SIGCONT);
-    close(fdFIFO);
-    */
+
     return EXIT_SUCCESS;
 }

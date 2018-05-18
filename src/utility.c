@@ -11,10 +11,32 @@
 #include <time.h>
 #include <unistd.h>
 
+void segmentcpy(char *dst, char *src, int from, int to) {
+    int x;
+    for (x = 0; x <= to - from; x++) {
+        dst[x] = src[x + from];
+    }
+    dst[to - from + 1] = '\0';
+}
+
+void sendData(Pk *data, int loggerID) {
+    /* sending data to logger */
+    waitpid(loggerID, 0, WUNTRACED);
+    //sleep(1);
+    int loggerFd = open(LOGGER_FIFO, O_WRONLY);
+    write(loggerFd, data->outType, strlen(data->outType) + 1);
+    write(loggerFd, data->origCmd, strlen(data->origCmd) + 1);
+    write(loggerFd, data->cmd, strlen(data->cmd) + 1);
+    write(loggerFd, data->out, strlen(data->out) + 1);
+    write(loggerFd, data->returnC, strlen(data->returnC) + 1);
+    kill(loggerID, SIGCONT);
+    close(loggerFd);
+}
+
 void executeCommand(int toShell, int fromShell, Pk *data, bool piping) {
-    int count = 1;
-    char tmp[32]; //temporary size
-    sprintf(tmp, "; echo $?; kill -18 %d\n", getpid());
+    ssize_t count;
+    char tmp[32];
+    sprintf(tmp, "; echo $?; kill -10 %d\n", getpid());
 
     /* write, then wait for shell to output everything on fifo */
     if (piping) {
@@ -24,8 +46,8 @@ void executeCommand(int toShell, int fromShell, Pk *data, bool piping) {
     }
     write(toShell, data->cmd, strlen(data->cmd));
     write(toShell, tmp, strlen(tmp));
-    kill(getpid(), SIGSTOP);
-
+    //kill(getpid(), SIGSTOP);
+    pause();
     /* reading from fifo */
     count = read(fromShell, data->out, PK_O);
     if (count >= PK_O) {
@@ -38,6 +60,12 @@ void executeCommand(int toShell, int fromShell, Pk *data, bool piping) {
     char *tmpReturn = strrchr(data->out, '\n');
     *tmpReturn = '\0';
     strcpy(data->returnC, tmpReturn + 1);
+
+    if (atoi(data->returnC) == 0) {
+        strcpy(data->outType, "StdOut");
+    } else {
+        strcpy(data->outType, "StdErr");
+    }
 }
 
 void removeFile(char *filePath) {

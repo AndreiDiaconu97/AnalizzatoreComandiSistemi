@@ -26,11 +26,15 @@ typedef struct Settings {
     bool code;
 } settings;
 
+#define PK_T 24
 #define PK_O 2048
 #define PK_R 10
 
 typedef struct Pack {
-    char cmd[CMD_S + 10];
+    char origCmd[CMD_S];
+    char outType[PK_T];
+
+    char cmd[CMD_S];
     char out[PK_O];
     char returnC[PK_R];
 } Pk;
@@ -42,6 +46,8 @@ bool evaluateCommand(settings *s, char *arg, char *val);
 void showSettings(settings *s);
 
 /* utility.c */
+void segmentcpy(char *dst, char *src, int from, int to);
+void sendData(Pk *data, int loggerID);
 void executeCommand(int toShell, int fromShell, Pk *data, bool piping);
 void removeFile(char *filePath);
 char *getcTime();
