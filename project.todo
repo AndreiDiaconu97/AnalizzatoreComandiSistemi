@@ -2,6 +2,7 @@ AnalizzatoreComandiSistemi:
   ☐ @critical Rename project folder to LABSO1-2017_2018--MAT01_MAT02_MAT03_MAT04
   ☐ Clean code
   ☐ Comment code
+  ☐ @critical change unlink() with remove()
   Here a TO-DO list for every file, based on folder hierarchy
   src:
     logger.c:

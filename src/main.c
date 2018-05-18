@@ -12,6 +12,15 @@
 #include <time.h>      //not used
 #include <unistd.h>
 
+void segmentcpy(char *dst, char *src, int from, int to) {
+    int len = to - from;
+    int x;
+    for (x = 0; x <= len; x++) {
+        dst[x] = src[x + from];
+    }
+    dst[len + 1] = '\0';
+}
+
 int main(int argc, char *argv[]) {
     /* user-settings container */
     settings sett;
@@ -144,23 +153,50 @@ int main(int argc, char *argv[]) {
     fromShell = open(FROM_SHELL_FIFO, O_RDONLY);
     Pk data;
 
-    strcpy(data.cmd, "cd awffwan");
-    executeCommand(toShell, fromShell, &data, false);
-    printf("COMMAND:\t%s\n", data.cmd);
-    printf("OUTPUT:\t\t%s\n", data.out);
-    printf("RETURN C.:\t%s\n\n", data.returnC);
+    printf("COMMD: %s\n", sett.cmd);
 
-    strcpy(data.cmd, "wc");
-    executeCommand(toShell, fromShell, &data, true);
-    printf("COMMAND:\t%s\n", data.cmd);
-    printf("OUTPUT:\t\t%s\n", data.out);
-    printf("RETURN C.:\t%s\n\n", data.returnC);
+    int i = 0;
+    int f = 0;
+    bool lastIsPipe = false;
+    for (f = 0; f <= strlen(sett.cmd); f++) { // pwd; ls'\0'
+        if ((sett.cmd[f] == ';') || (sett.cmd[f] == '\0')) {
+            segmentcpy(data.cmd, sett.cmd, i, f - 1);
+            printf("DATA: %s\n", data.cmd);
+            executeCommand(toShell, fromShell, &data, lastIsPipe);
+            lastIsPipe = false;
+            i = f + 1;
+            printf("COMMAND:\t%s\n", data.cmd);
+            printf("OUTPUT:\t\t%s\n", data.out);
+            printf("RETURN C.:\t%s\n\n", data.returnC);
+        } else if (sett.cmd[f] == '|') {
+            segmentcpy(data.cmd, sett.cmd, i, f - 1);
+            executeCommand(toShell, fromShell, &data, lastIsPipe);
+            lastIsPipe = true;
+            i = f + 1;
+            printf("COMMAND:\t%s\n", data.cmd);
+            printf("OUTPUT:\t\t%s\n", data.out);
+            printf("RETURN C.:\t%s\n\n", data.returnC);
+        }
+    }
+    printf("FINISHED\n");
 
-    strcpy(data.cmd, "pwd");
-    executeCommand(toShell, fromShell, &data, true);
-    printf("COMMAND:\t%s\n", data.cmd);
-    printf("OUTPUT:\t\t%s\n", data.out);
-    printf("RETURN C.:\t%s\n\n", data.returnC);
+    // strcpy(data.cmd, "cd awffwan");
+    // executeCommand(toShell, fromShell, &data, false);
+    // printf("COMMAND:\t%s\n", data.cmd);
+    // printf("OUTPUT:\t\t%s\n", data.out);
+    // printf("RETURN C.:\t%s\n\n", data.returnC);
+
+    // strcpy(data.cmd, "wc");
+    // executeCommand(toShell, fromShell, &data, true);
+    // printf("COMMAND:\t%s\n", data.cmd);
+    // printf("OUTPUT:\t\t%s\n", data.out);
+    // printf("RETURN C.:\t%s\n\n", data.returnC);
+
+    // strcpy(data.cmd, "pwd");
+    // executeCommand(toShell, fromShell, &data, true);
+    // printf("COMMAND:\t%s\n", data.cmd);
+    // printf("OUTPUT:\t\t%s\n", data.out);
+    // printf("RETURN C.:\t%s\n\n", data.returnC);
 
     close(fromShell);
     close(toShell);
