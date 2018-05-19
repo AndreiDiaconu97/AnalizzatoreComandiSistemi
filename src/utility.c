@@ -20,14 +20,26 @@ void segmentcpy(char *dst, char *src, int from, int to) {
 }
 
 void sendData(Pk *data, int loggerID) {
+    int outTypeSize = strlen(data->outType) + 1;
+    int origCmdSize = strlen(data->origCmd) + 1;
+    int cmdSize = strlen(data->cmd) + 1;
+    int outSize = strlen(data->out) + 1;
+    int returnSize = strlen(data->returnC) + 1;
+
+    int dataSize = outTypeSize + origCmdSize + cmdSize + outSize + returnSize;
+    char dataLen[65];
+
+    sprintf(dataLen, "%d", dataSize);
+
     int loggerFd = open(LOGGER_FIFO, O_WRONLY);
     /* allowed to send data to logger */
-    write(loggerFd, data->outType, strlen(data->outType) + 1);
-    write(loggerFd, data->origCmd, strlen(data->origCmd) + 1);
-    write(loggerFd, data->cmd, strlen(data->cmd) + 1);
-    write(loggerFd, data->out, strlen(data->out) + 1);
-    write(loggerFd, data->returnC, strlen(data->returnC) + 1);
-    kill(loggerID, SIGCONT);
+    write(loggerFd, dataLen, strlen(dataLen) + 1);
+    write(loggerFd, data->outType, outTypeSize);
+    write(loggerFd, data->origCmd, origCmdSize);
+    write(loggerFd, data->cmd, cmdSize);
+    write(loggerFd, data->out, outSize);
+    write(loggerFd, data->returnC, returnSize);
+    //kill(loggerID, SIGCONT);
     close(loggerFd);
 }
 

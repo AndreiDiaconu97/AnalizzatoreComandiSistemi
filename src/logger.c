@@ -33,9 +33,10 @@ void logger(char *argv[]) {
     int inNum = 5;
     char *inputs[inNum];
     char activeSenderID[ID_S + 1] = "0";
+    char size[65];
 
     /* open FIFO from reading side */
-    int myFifo = open(fifoPipe, O_RDONLY);
+    int myFifo = open(fifoPipe, O_RDWR);
 
     /* open/create log file and move pipe to stdout */
     int myLog = open(argv[0], O_WRONLY | O_APPEND | O_CREAT, 0777);
@@ -45,14 +46,22 @@ void logger(char *argv[]) {
     /// actual program ///
     printf("---------------------------------------------------\n");
     while (1) {
-        kill(getpid(), SIGSTOP);
-        /* read data from fifo */
-        count = read(myFifo, buffer, sizeof buffer);
+        //kill(getpid(), SIGSTOP);
 
-        /* buffer overflow check */
-        if (read(myFifo, buffer, sizeof buffer)) {
-            printf("ERROR: fifo contained more than buffer capacity: %d chars\n", 500);
-            kill(getpid(), SIGUSR1);
+        /* read next data-packet size */
+        size[0] = '\0';
+        do {
+            read(myFifo, buffer, 1);
+            strncat(size, buffer, 1);
+        } while (*buffer != '\0');
+
+        /* read possibly frammented data */
+        int left = atoi(size);
+        int lastIndex = -1;
+        while (left != 0) {
+            count = read(myFifo, &buffer[lastIndex+1], left);
+            lastIndex += count;
+            left -= count;
         }
 
         /* analysing string */
@@ -64,7 +73,7 @@ void logger(char *argv[]) {
                 inputs[inTmp++] = &buffer[i + 1];
             }
         }
-
+        printf("SIZE:\t%s\n", size);
         printf("ID:\t\t\t%s\n", "1.1.1");
         printf("TYPE:\t\t%s\n", inputs[0]);
         printf("COMMAND:\t%s\n", inputs[1]);

@@ -31,6 +31,7 @@ AnalizzatoreComandiSistemi:
   Makefile:
     ☐ try to hide some commands from tab-suggestions
     ☐ @high Implement user-defined MACRO for compilation
+    ☐ check for rare cases of compiling/linking when not needed
 
 Archive:
   Completed todos will be moved here
