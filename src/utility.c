@@ -4,10 +4,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <sys/wait.h>
-#include <syslog.h>
+//#include <sys/stat.h>
+//#include <sys/types.h>
+//#include <sys/wait.h>
+//#include <syslog.h>
 #include <time.h>
 #include <unistd.h>
 
@@ -19,7 +19,7 @@ void segmentcpy(char *dst, char *src, int from, int to) {
     dst[to - from + 1] = '\0';
 }
 
-void sendData(Pk *data, int loggerID) {
+void sendData(Pk *data) {
     int outTypeSize = strlen(data->outType) + 1;
     int origCmdSize = strlen(data->origCmd) + 1;
     int cmdSize = strlen(data->cmd) + 1;
@@ -44,7 +44,7 @@ void sendData(Pk *data, int loggerID) {
 }
 
 void executeCommand(int toShell, int fromShell, Pk *data, bool piping) {
-    ssize_t count;
+    int count;
     char tmp[32];
     sprintf(tmp, "; echo $?; kill -10 %d\n", getpid());
 

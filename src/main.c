@@ -1,15 +1,15 @@
 #include "myLibrary.h"
-#include <errno.h> //not used
+//#include <errno.h>
 #include <fcntl.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
-#include <sys/types.h> //not used
-#include <sys/wait.h>  //not used
-#include <syslog.h>    //not used
-#include <time.h>      //not used
+//#include <sys/types.h>
+#include <sys/wait.h>
+//#include <syslog.h>
+//#include <time.h>
 #include <unistd.h>
 
 void unpauser(int sig) {
@@ -29,9 +29,9 @@ int main(int argc, char *argv[]) {
 
     /* some program variables */
     int pidFD;
-    bool needNew = false;
-    int loggerID = 0;
+    int loggerID;
     int shellID;
+    bool needNew = false;
     char buffer[sett.maxBuff];
 
     /******************************************************************************/
@@ -88,7 +88,7 @@ int main(int argc, char *argv[]) {
         if (loggerID == 0) {
             /* logger must be leader of its own group in order to be a daemon */
             setsid();
-            
+
             /* logger call with appropriate arguments */
             char *args[3] = {sett.logF, LOG_PID_F, LOGGER_FIFO};
             logger(args);
@@ -163,14 +163,14 @@ int main(int argc, char *argv[]) {
         case ';':
             segmentcpy(data.cmd, data.origCmd, i, f - 1);
             executeCommand(toShell[1], fromShell[0], &data, lastIsPipe);
-            sendData(&data, loggerID);
+            sendData(&data);
             i = f + 1;
             lastIsPipe = false;
             break;
         case '|':
             segmentcpy(data.cmd, data.origCmd, i, f - 1);
             executeCommand(toShell[1], fromShell[0], &data, lastIsPipe);
-            sendData(&data, loggerID);
+            sendData(&data);
             i = f + 1;
             lastIsPipe = true;
             break;

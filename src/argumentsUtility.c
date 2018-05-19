@@ -1,15 +1,14 @@
 #include "myLibrary.h"
-#include <fcntl.h>
+//#include <fcntl.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <syslog.h>
-#include <time.h>
-#include <unistd.h>
-// test23
+//#include <sys/stat.h>
+//#include <sys/types.h>
+//#include <syslog.h>
+//#include <time.h>
+//#include <unistd.h>
 
 void initSettings(settings *s) {
     s->code = true;
