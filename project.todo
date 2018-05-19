@@ -17,8 +17,7 @@ AnalizzatoreComandiSistemi:
           ☐ @high support special symbols for subcommand detection (&&, ||, <, >, |, ;)
       logger-sending:
         @NB popen() causes broken fifo with commands s.a. "ls" because pclose() is called and there is no time for output on pipe
-        ☐ fix subcommands concurrency
-        ☐ fix fathers concurrency
+        ☐ @low fix fathers concurrency maybe
         myLibrary.h:
       ✔ ok @done(18-05-10 16:18)
     utility.c:
@@ -47,7 +46,7 @@ Archive:
   ✔ @today use maxLen to limit command output @done(18-05-15 22:50)
   ✔ open shell once, get output for every command and subcommand, use echo "output" @started(18-05-16 18:48) @done(18-05-19 00:01) @lasted(2 days 5 hours 13 minutes 54 seconds)
   ✔ implement subcommands output @done(18-05-19 00:02)
-
+  ✔ fix subcommands concurrency @done(18-05-19 16:34)
 
 
 //////////////////////////////////////////////////////////////////////////////////
