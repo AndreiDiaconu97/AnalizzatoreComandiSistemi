@@ -20,15 +20,8 @@ void segmentcpy(char *dst, char *src, int from, int to) {
 }
 
 void sendData(Pk *data, int loggerID) {
-<<<<<<< HEAD
     int loggerFd = open(LOGGER_FIFO, O_WRONLY);
     /* allowed to send data to logger */
-=======
-    /* sending data to logger */
-    waitpid(loggerID, 0, WUNTRACED);
-    //sleep(1);
-    int loggerFd = open(LOGGER_FIFO, O_WRONLY);
->>>>>>> e57bcd668210822671ecaf9ff9a2e95b594ae3ab
     write(loggerFd, data->outType, strlen(data->outType) + 1);
     write(loggerFd, data->origCmd, strlen(data->origCmd) + 1);
     write(loggerFd, data->cmd, strlen(data->cmd) + 1);
@@ -65,16 +58,6 @@ void executeCommand(int toShell, int fromShell, Pk *data, bool piping) {
     char *tmpReturn = strrchr(data->out, '\n');
     *tmpReturn = '\0';
     strcpy(data->returnC, tmpReturn + 1);
-<<<<<<< HEAD
-=======
-
-    if (atoi(data->returnC) == 0) {
-        strcpy(data->outType, "StdOut");
-    } else {
-        strcpy(data->outType, "StdErr");
-    }
-}
->>>>>>> e57bcd668210822671ecaf9ff9a2e95b594ae3ab
 
     if (atoi(data->returnC) == 0) {
         strcpy(data->outType, "StdOut");
