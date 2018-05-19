@@ -7,12 +7,14 @@ typedef int bool;
 #define false 0
 
 /* MACRO for string lenghts */
+#define ID_S 7
 #define PATH_S 512
 #define CMD_S 124 /* given command max length */
 #define OUT_S 124 /* how much of the command output to save on log */
 
 #define LOG_PID_F "loggerPid.txt"
 #define LOGGER_FIFO "/tmp/temp/loggerFifo"
+#define LOGGER_QUEUE "/tmp/temp/loggerqueue"
 #define TO_SHELL_FIFO "/tmp/temp/toShellFifo"
 #define FROM_SHELL_FIFO "/tmp/temp/fromShellFifo"
 
@@ -26,11 +28,15 @@ typedef struct Settings {
     bool code;
 } settings;
 
+#define PK_T 24
 #define PK_O 2048
 #define PK_R 10
 
 typedef struct Pack {
-    char cmd[CMD_S + 10];
+    char origCmd[CMD_S];
+    char outType[PK_T];
+
+    char cmd[CMD_S];
     char out[PK_O];
     char returnC[PK_R];
 } Pk;
@@ -42,8 +48,9 @@ bool evaluateCommand(settings *s, char *arg, char *val);
 void showSettings(settings *s);
 
 /* utility.c */
+void segmentcpy(char *dst, char *src, int from, int to);
+void sendData(Pk *data, int loggerID);
 void executeCommand(int toShell, int fromShell, Pk *data, bool piping);
-void removeFile(char *filePath);
 char *getcTime();
 void rmNewline(char *str);
 

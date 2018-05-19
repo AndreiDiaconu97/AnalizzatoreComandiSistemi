@@ -12,13 +12,7 @@
 #include <time.h>      //not used
 #include <unistd.h>
 
-void segmentcpy(char *dst, char *src, int from, int to) {
-    int len = to - from;
-    int x;
-    for (x = 0; x <= len; x++) {
-        dst[x] = src[x + from];
-    }
-    dst[len + 1] = '\0';
+void unpauser(int sig) {
 }
 
 int main(int argc, char *argv[]) {
@@ -49,9 +43,9 @@ int main(int argc, char *argv[]) {
     if (pidFD == -1) {
         needNew = true;
     } else {
-        char buffer[10];
-        read(pidFD, buffer, sizeof buffer);
-        loggerID = atoi(buffer);
+        char logIDbuffer[10];
+        read(pidFD, logIDbuffer, sizeof logIDbuffer);
+        loggerID = atoi(logIDbuffer);
         if (getpgid(loggerID) < 0) {
             needNew = true;
         } else {
@@ -65,6 +59,23 @@ int main(int argc, char *argv[]) {
     }
     close(pidFD);
 
+    /* 'kill' special command check */
+    if (!strcmp(sett.cmd, "kill")) {
+        if (needNew) {
+            printf("No Daemon\n");
+        } else {
+            int loggerFd = open(LOGGER_FIFO, O_WRONLY);
+
+            kill(loggerID, SIGUSR1);
+            kill(loggerID, SIGCONT);
+            waitpid(loggerID, NULL, 0);
+
+            close(loggerFd);
+            printf("Daemon killed\n");
+        }
+        exit(EXIT_SUCCESS);
+    }
+
     /* fork for logger if no existing one is found */
     if (needNew) {
         unlink(LOGGER_FIFO);
@@ -77,13 +88,14 @@ int main(int argc, char *argv[]) {
         if (loggerID == 0) {
             /* logger must be leader of its own group in order to be a daemon */
             setsid();
-
+            
             /* logger call with appropriate arguments */
             char *args[3] = {sett.logF, LOG_PID_F, LOGGER_FIFO};
             logger(args);
-            exit(EXIT_SUCCESS);
+            printf("Logger error\n");
+            exit(EXIT_FAILURE);
         } else {
-            /* if there is not logger found save childID on file */
+            /* father saves childID on file */
             printf("Saving actual logger ID\n");
             sprintf(buffer, "%d", loggerID);
             pidFD = open(LOG_PID_F, O_WRONLY | O_TRUNC | O_CREAT, 0777);
@@ -95,28 +107,14 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    /* 'kill' special command check */
-    if (!strcmp(sett.cmd, "kill")) {
-        int fdFIFO = open(LOGGER_FIFO, O_WRONLY);
-
-        kill(loggerID, SIGUSR1);
-        kill(loggerID, SIGCONT);
-        waitpid(loggerID, NULL, 0);
-
-        close(fdFIFO);
-        printf("Daemon killed\n");
-        exit(EXIT_SUCCESS);
-    }
-
     /******************************************************************************/
     /********************************* SHELL SETUP ********************************/
     /******************************************************************************/
-    unlink(TO_SHELL_FIFO); // USE PIPE //
-    unlink(FROM_SHELL_FIFO);
-    mkfifo(TO_SHELL_FIFO, 0777);
-    mkfifo(FROM_SHELL_FIFO, 0777);
-    int toShell;
-    int fromShell;
+
+    int toShell[2];
+    int fromShell[2];
+    pipe(toShell);
+    pipe(fromShell);
 
     /* shell process */
     if ((shellID = fork()) < 0) {
@@ -124,16 +122,14 @@ int main(int argc, char *argv[]) {
         exit(EXIT_FAILURE);
     }
     if (shellID == 0) {
-        //setsid();
-        toShell = open(TO_SHELL_FIFO, O_RDONLY);
-        fromShell = open(FROM_SHELL_FIFO, O_WRONLY);
+        dup2(toShell[0], STDIN_FILENO);
+        dup2(fromShell[1], STDOUT_FILENO);
+        dup2(fromShell[1], STDERR_FILENO);
 
-        dup2(toShell, STDIN_FILENO);
-        dup2(fromShell, STDOUT_FILENO);
-        dup2(fromShell, STDERR_FILENO);
-
-        close(toShell);
-        close(fromShell);
+        close(toShell[0]);
+        close(toShell[1]);
+        close(fromShell[0]);
+        close(fromShell[1]);
 
         char *arguments[] = {"sh", 0};
         execvp(arguments[0], arguments);
@@ -149,70 +145,44 @@ int main(int argc, char *argv[]) {
     printf("Logger ID: %d\n", loggerID);
     printf("ShellID: %d\n", shellID);
 
-    toShell = open(TO_SHELL_FIFO, O_WRONLY);
-    fromShell = open(FROM_SHELL_FIFO, O_RDONLY);
+    close(toShell[0]);
+    close(fromShell[1]);
+    signal(SIGUSR1, unpauser);
+    //int loggerFd;
     Pk data;
+    strcpy(data.origCmd, sett.cmd);
 
-    printf("COMMD: %s\n", sett.cmd);
+    printf("\nFULL COMMAND: %s\n", data.origCmd);
 
     int i = 0;
     int f = 0;
     bool lastIsPipe = false;
-    for (f = 0; f <= strlen(sett.cmd); f++) { // pwd; ls'\0'
-        if ((sett.cmd[f] == ';') || (sett.cmd[f] == '\0')) {
-            segmentcpy(data.cmd, sett.cmd, i, f - 1);
-            printf("DATA: %s\n", data.cmd);
-            executeCommand(toShell, fromShell, &data, lastIsPipe);
+    for (f = 0; f <= strlen(data.origCmd); f++) { // pwd; ls'\0'
+        switch (data.origCmd[f]) {
+        case '\0':
+        case ';':
+            segmentcpy(data.cmd, data.origCmd, i, f - 1);
+            executeCommand(toShell[1], fromShell[0], &data, lastIsPipe);
+            sendData(&data, loggerID);
+            i = f + 1;
             lastIsPipe = false;
+            break;
+        case '|':
+            segmentcpy(data.cmd, data.origCmd, i, f - 1);
+            executeCommand(toShell[1], fromShell[0], &data, lastIsPipe);
+            sendData(&data, loggerID);
             i = f + 1;
-            printf("COMMAND:\t%s\n", data.cmd);
-            printf("OUTPUT:\t\t%s\n", data.out);
-            printf("RETURN C.:\t%s\n\n", data.returnC);
-        } else if (sett.cmd[f] == '|') {
-            segmentcpy(data.cmd, sett.cmd, i, f - 1);
-            executeCommand(toShell, fromShell, &data, lastIsPipe);
             lastIsPipe = true;
-            i = f + 1;
-            printf("COMMAND:\t%s\n", data.cmd);
-            printf("OUTPUT:\t\t%s\n", data.out);
-            printf("RETURN C.:\t%s\n\n", data.returnC);
+            break;
+        default:
+            break;
         }
     }
+
     printf("FINISHED\n");
-
-    // strcpy(data.cmd, "cd awffwan");
-    // executeCommand(toShell, fromShell, &data, false);
-    // printf("COMMAND:\t%s\n", data.cmd);
-    // printf("OUTPUT:\t\t%s\n", data.out);
-    // printf("RETURN C.:\t%s\n\n", data.returnC);
-
-    // strcpy(data.cmd, "wc");
-    // executeCommand(toShell, fromShell, &data, true);
-    // printf("COMMAND:\t%s\n", data.cmd);
-    // printf("OUTPUT:\t\t%s\n", data.out);
-    // printf("RETURN C.:\t%s\n\n", data.returnC);
-
-    // strcpy(data.cmd, "pwd");
-    // executeCommand(toShell, fromShell, &data, true);
-    // printf("COMMAND:\t%s\n", data.cmd);
-    // printf("OUTPUT:\t\t%s\n", data.out);
-    // printf("RETURN C.:\t%s\n\n", data.returnC);
-
-    close(fromShell);
-    close(toShell);
-    unlink(TO_SHELL_FIFO);
-    unlink(FROM_SHELL_FIFO);
+    //write(toShell, "exit\n", strlen("exit\n"));
+    close(toShell[1]);
+    close(fromShell[0]);
     waitpid(shellID, NULL, 0); /* NEED ERROR CHECKING HERE */
-    /* sending data to logger */
-    /*
-    fdFIFO = open(myFifo, O_WRONLY);
-    write(fdFIFO, "TYPE", strlen("TYPE") + 1);
-    write(fdFIFO, sett.cmd, strlen(sett.cmd) + 1);
-    write(fdFIFO, sett.cmd, strlen(sett.cmd) + 1);
-    write(fdFIFO, outBuff, strlen(outBuff) + 1);
-    write(fdFIFO, retCode, strlen(retCode) + 1);
-    kill(loggerID, SIGCONT);
-    close(fdFIFO);
-    */
     return EXIT_SUCCESS;
 }
