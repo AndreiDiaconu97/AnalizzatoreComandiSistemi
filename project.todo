@@ -2,24 +2,24 @@ AnalizzatoreComandiSistemi:
   ☐ @critical Rename project folder to LABSO1-2017_2018--MAT01_MAT02_MAT03_MAT04
   ☐ Clean code
   ☐ Comment code
+  ☐ @critical change unlink() with remove()
   Here a TO-DO list for every file, based on folder hierarchy
   src:
     logger.c:
       ☐ implement log formatting ("txt" and "csv")
-      
     main.c:
       settings:
         ☐ @high check why loggerID must be initialised
         ☐ improve settings with useful properties
         ☐ maybe can save settings?
-        ☐ open shell once, get output for every command and subcommand, use echo "output" @started(18-05-16 18:48)
-      commands:
-        ☐ implement subcommands output
-        ☐ @high support special symbols for subcommand detection (&&, ||, <, >, |, ;)
+        commands:
+          @NB reading uncorrupted output implies that a new shell is needed every time
+          ☐ @high support special symbols for subcommand detection (&&, ||, <, >, |, ;)
       logger-sending:
         @NB popen() causes broken fifo with commands s.a. "ls" because pclose() is called and there is no time for output on pipe
-        ☐ choose programs-logger concurrency ? single string per program : additional SIG handler for logger availability
-    myLibrary.h:
+        ☐ fix subcommands concurrency
+        ☐ fix fathers concurrency
+        myLibrary.h:
       ✔ ok @done(18-05-10 16:18)
     utility.c:
   tmp:
@@ -31,6 +31,7 @@ AnalizzatoreComandiSistemi:
   Makefile:
     ☐ try to hide some commands from tab-suggestions
     ☐ @high Implement user-defined MACRO for compilation
+    ☐ check for rare cases of compiling/linking when not needed
 
 Archive:
   Completed todos will be moved here
@@ -44,6 +45,8 @@ Archive:
   ✔ @low Choose if automatically delete loggerPid.txt before closing @done(18-05-14 21:11)
   ✔ @high check rare cases for buffer overflow @done(18-05-15 22:52)
   ✔ @today use maxLen to limit command output @done(18-05-15 22:50)
+  ✔ open shell once, get output for every command and subcommand, use echo "output" @started(18-05-16 18:48) @done(18-05-19 00:01) @lasted(2 days 5 hours 13 minutes 54 seconds)
+  ✔ implement subcommands output @done(18-05-19 00:02)
 
 
 

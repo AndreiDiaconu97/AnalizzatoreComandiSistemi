@@ -6,21 +6,76 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <sys/wait.h>
 #include <syslog.h>
 #include <time.h>
 #include <unistd.h>
 
-char *cmdOutSplitReturnCode(char *outBuff, char *retCode) {
-    rmNewline(outBuff);               /* replace ending '\n' with '\0' */
-    retCode = strrchr(outBuff, '\n'); /* return code is placed after actual last '\n' */
-    *retCode = '\0';                  /* separate command output from return code */
-    return ++retCode;
+void segmentcpy(char *dst, char *src, int from, int to) {
+    int x;
+    for (x = 0; x <= to - from; x++) {
+        dst[x] = src[x + from];
+    }
+    dst[to - from + 1] = '\0';
 }
 
-void removeFile(char *filePath) {
-    char rmFile[PATH_S] = "rm ";
-    strcat(rmFile, filePath);
-    system(rmFile);
+void sendData(Pk *data, int loggerID) {
+    int outTypeSize = strlen(data->outType) + 1;
+    int origCmdSize = strlen(data->origCmd) + 1;
+    int cmdSize = strlen(data->cmd) + 1;
+    int outSize = strlen(data->out) + 1;
+    int returnSize = strlen(data->returnC) + 1;
+
+    int dataSize = outTypeSize + origCmdSize + cmdSize + outSize + returnSize;
+    char dataLen[65];
+
+    sprintf(dataLen, "%d", dataSize);
+
+    int loggerFd = open(LOGGER_FIFO, O_WRONLY);
+    /* allowed to send data to logger */
+    write(loggerFd, dataLen, strlen(dataLen) + 1);
+    write(loggerFd, data->outType, outTypeSize);
+    write(loggerFd, data->origCmd, origCmdSize);
+    write(loggerFd, data->cmd, cmdSize);
+    write(loggerFd, data->out, outSize);
+    write(loggerFd, data->returnC, returnSize);
+    //kill(loggerID, SIGCONT);
+    close(loggerFd);
+}
+
+void executeCommand(int toShell, int fromShell, Pk *data, bool piping) {
+    ssize_t count;
+    char tmp[32];
+    sprintf(tmp, "; echo $?; kill -10 %d\n", getpid());
+
+    /* write, then wait for shell to output everything on fifo */
+    if (piping) {
+        write(toShell, "echo \"", strlen("echo \""));
+        write(toShell, data->out, strlen(data->out));
+        write(toShell, "\"|", strlen("\"|"));
+    }
+    write(toShell, data->cmd, strlen(data->cmd));
+    write(toShell, tmp, strlen(tmp));
+    //kill(getpid(), SIGSTOP);
+    pause();
+    /* reading from fifo */
+    count = read(fromShell, data->out, PK_O);
+    if (count >= PK_O) {
+        printf("Reading from Shell: buffer is too small\nClosing...\n");
+        exit(EXIT_FAILURE);
+    }
+    data->out[count - 1] = '\0';
+
+    /* retrieving return code from output + splitting */
+    char *tmpReturn = strrchr(data->out, '\n');
+    *tmpReturn = '\0';
+    strcpy(data->returnC, tmpReturn + 1);
+
+    if (atoi(data->returnC) == 0) {
+        strcpy(data->outType, "StdOut");
+    } else {
+        strcpy(data->outType, "StdErr");
+    }
 }
 
 char *getcTime() {

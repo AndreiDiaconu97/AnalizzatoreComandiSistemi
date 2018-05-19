@@ -11,28 +11,32 @@
 
 char *loggerIDfile;
 char *fifoPipe;
+
 void usr1_handler(int sig) {
-    removeFile(loggerIDfile);
-    removeFile(fifoPipe);
+    remove(loggerIDfile);
+    remove(fifoPipe);
+    remove(LOGGER_QUEUE);
     exit(EXIT_SUCCESS);
 }
 
 void logger(char *argv[]) {
-    /// initialization ///
     loggerIDfile = argv[1];
     fifoPipe = argv[2];
+
     /* logger is closed with a custom signal handler */
     signal(SIGUSR1, usr1_handler);
 
     /* allocations needed */
     ssize_t count;
-    char buffer[500];
+    char buffer[2 * CMD_S + PK_T + PK_O + PK_R];
     char *c_time_string;
     int inNum = 5;
     char *inputs[inNum];
+    char activeSenderID[ID_S + 1] = "0";
+    char size[65];
 
     /* open FIFO from reading side */
-    int myFifo = open(argv[2], O_RDONLY);
+    int myFifo = open(fifoPipe, O_RDWR);
 
     /* open/create log file and move pipe to stdout */
     int myLog = open(argv[0], O_WRONLY | O_APPEND | O_CREAT, 0777);
@@ -42,20 +46,25 @@ void logger(char *argv[]) {
     /// actual program ///
     printf("---------------------------------------------------\n");
     while (1) {
-        kill(getpid(), SIGSTOP);
+        //kill(getpid(), SIGSTOP);
 
-        /* read data from fifo */
-        count = read(myFifo, buffer, 500);
+        /* read next data-packet size */
+        size[0] = '\0';
+        do {
+            read(myFifo, buffer, 1);
+            strncat(size, buffer, 1);
+        } while (*buffer != '\0');
 
-        /* buffer overflow check */
-        if (read(myFifo, buffer, 500)) {
-            printf("ERROR: fifo contained more than buffer capacity: %d chars\n", 500);
-            kill(getpid(), SIGUSR1);
+        /* read possibly frammented data */
+        int left = atoi(size);
+        int lastIndex = -1;
+        while (left != 0) {
+            count = read(myFifo, &buffer[lastIndex+1], left);
+            lastIndex += count;
+            left -= count;
         }
 
-        //printf("SIZE:\t\t%zibyte\n", count);
-
-        /* get every input data from last buffer */
+        /* analysing string */
         int inTmp = 0;
         inputs[inTmp++] = buffer;
         int i;
@@ -64,31 +73,15 @@ void logger(char *argv[]) {
                 inputs[inTmp++] = &buffer[i + 1];
             }
         }
-
-        /* ID */
-        printf("ID:\t\t%s\n", "1.1.1");
-
-        /* message type */
+        printf("SIZE:\t%s\n", size);
+        printf("ID:\t\t\t%s\n", "1.1.1");
         printf("TYPE:\t\t%s\n", inputs[0]);
-
-        /* original command */
         printf("COMMAND:\t%s\n", inputs[1]);
-
-        /* subcommand */
         printf("SUBCOMMAND:\t%s\n", inputs[2]);
-
-        /* timestamp */
         c_time_string = getcTime();
         printf("DATE:\t\t%s\n", c_time_string);
-
-        /* command output */
         printf("OUTPUT:\n\n%s\n\n", inputs[3]);
-
-        /* return code */
         printf("RETURN CODE: %s\n", inputs[4]);
         printf("---------------------------------------------------\n");
-
-        /* pause mode after getting data */
-        /* Processes can check if logger is in pause mode in order to send data safely */
     }
 }
