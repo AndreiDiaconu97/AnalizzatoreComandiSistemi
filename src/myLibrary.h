@@ -11,6 +11,7 @@ typedef int bool;
 #define CMD_S 124 /* given command max length */
 #define OUT_S 124 /* how much of the command output to save on log */
 
+#define LOG_FILE "log.txt"
 #define LOG_PID_F "loggerPid.txt"
 #define LOGGER_FIFO "/tmp/temp/loggerFifo"
 #define LOGGER_QUEUE "/tmp/temp/loggerqueue"
@@ -30,6 +31,8 @@ typedef struct Settings {
 #define PK_R 10
 
 typedef struct Pack {
+    bool noOut;
+
     char origCmd[CMD_S];
     char outType[PK_T];
 

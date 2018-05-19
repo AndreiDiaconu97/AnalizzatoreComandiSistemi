@@ -20,25 +20,44 @@ void segmentcpy(char *dst, char *src, int from, int to) {
 }
 
 void sendData(Pk *data) {
+    /* elements lengths */
     int outTypeSize = strlen(data->outType) + 1;
     int origCmdSize = strlen(data->origCmd) + 1;
     int cmdSize = strlen(data->cmd) + 1;
     int outSize = strlen(data->out) + 1;
     int returnSize = strlen(data->returnC) + 1;
-
     int dataSize = outTypeSize + origCmdSize + cmdSize + outSize + returnSize;
-    char dataLen[65];
 
+    char dataLen[65];
     sprintf(dataLen, "%d", dataSize);
 
+    /* concatenating all data on single string */
+    int i = 0;
+    char superstring[dataSize + strlen(dataLen) + 1];
+    strcpy(&superstring[i], dataLen);
+    i += strlen(dataLen) + 1;
+    strcpy(&superstring[i], data->outType);
+    i += outTypeSize;
+    strcpy(&superstring[i], data->origCmd);
+    i += origCmdSize;
+    strcpy(&superstring[i], data->cmd);
+    i += cmdSize;
+    strcpy(&superstring[i], data->out);
+    i += outSize;
+    strcpy(&superstring[i], data->returnC);
+    i += returnSize;
+
+    /* send superstring */
     int loggerFd = open(LOGGER_FIFO, O_WRONLY);
-    /* allowed to send data to logger */
-    write(loggerFd, dataLen, strlen(dataLen) + 1);
-    write(loggerFd, data->outType, outTypeSize);
-    write(loggerFd, data->origCmd, origCmdSize);
-    write(loggerFd, data->cmd, cmdSize);
-    write(loggerFd, data->out, outSize);
-    write(loggerFd, data->returnC, returnSize);
+    write(loggerFd, superstring, dataSize + strlen(dataLen) + 1);
+
+    /* multi-send variant (more buggy) */
+    // write(loggerFd, dataLen, strlen(dataLen) + 1);
+    // write(loggerFd, data->outType, outTypeSize);
+    // write(loggerFd, data->origCmd, origCmdSize);
+    // write(loggerFd, data->cmd, cmdSize);
+    // write(loggerFd, data->out, outSize);
+    // write(loggerFd, data->returnC, returnSize);
     //kill(loggerID, SIGCONT);
     close(loggerFd);
 }
@@ -48,29 +67,46 @@ void executeCommand(int toShell, int fromShell, Pk *data, bool piping) {
     char tmp[32];
     sprintf(tmp, "; echo $?; kill -10 %d\n", getpid());
 
-    /* write, then wait for shell to output everything on fifo */
+    /* write and wait for shell response */
     if (piping) {
-        write(toShell, "echo \"", strlen("echo \""));
-        write(toShell, data->out, strlen(data->out));
-        write(toShell, "\"|", strlen("\"|"));
+        if (data->noOut) {
+            write(toShell, "true|", strlen("true|"));
+        } else {
+            write(toShell, "echo \"", strlen("echo \""));
+            write(toShell, data->out, strlen(data->out));
+            write(toShell, "\"|", strlen("\"|"));
+        }
     }
     write(toShell, data->cmd, strlen(data->cmd));
     write(toShell, tmp, strlen(tmp));
-    //kill(getpid(), SIGSTOP);
     pause();
+
     /* reading from fifo */
     count = read(fromShell, data->out, PK_O);
     if (count >= PK_O) {
         printf("Reading from Shell: buffer is too small\nClosing...\n");
         exit(EXIT_FAILURE);
     }
-    data->out[count - 1] = '\0';
+    if (count > 1) {
+        /* delete last '\n' */
+        data->out[count - 1] = '\0';
+    } else {
+        printf("WARNING: got no output from command!\n");
+    }
 
-    /* retrieving return code from output + splitting */
+    /* return code */
     char *tmpReturn = strrchr(data->out, '\n');
-    *tmpReturn = '\0';
-    strcpy(data->returnC, tmpReturn + 1);
+    if (tmpReturn != NULL) {
+        *tmpReturn = '\0';
+        strcpy(data->returnC, tmpReturn + 1);
+        data->noOut = false;
+    } else {
+        strcpy(data->returnC, data->out);
+        strcpy(data->out, "(null)");
+        data->noOut = true;
+    }
 
+    /* output type */
     if (atoi(data->returnC) == 0) {
         strcpy(data->outType, "StdOut");
     } else {

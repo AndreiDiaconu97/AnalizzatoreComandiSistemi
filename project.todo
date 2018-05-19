@@ -14,10 +14,14 @@ AnalizzatoreComandiSistemi:
         ☐ maybe can save settings?
         commands:
           @NB reading uncorrupted output implies that a new shell is needed every time
-          ☐ @high support special symbols for subcommand detection (&&, ||, <, >, |, ;)
-      logger-sending:
+          @critical WARNING: commands with no output (only return code) are simulated with "true" when piping
+          ☐ support special symbols for subcommand detection (&&, ||, <, >, |, ;)
+          ☐ fix cd command (cd|wc should return 0 0 0)
+          ☐ @critical sometimes process blocks
+          logger-sending:
         @NB popen() causes broken fifo with commands s.a. "ls" because pclose() is called and there is no time for output on pipe
         ☐ @low fix fathers concurrency maybe
+        ✔ fix cases of broken return code (check what is capturing the logger) @done(18-05-19 20:00) (switched to single string)
         myLibrary.h:
       ✔ ok @done(18-05-10 16:18)
     utility.c:

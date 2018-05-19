@@ -18,7 +18,7 @@ void initSettings(settings *s) {
 
     char *logfile = malloc(sizeof(char) * PATH_S);
     char *command = malloc(sizeof(char) * CMD_S);
-    strcpy(logfile, "commands.log");
+    strcpy(logfile, LOG_FILE);
     strcpy(command, "");
     s->logF = logfile;
     s->cmd = command;

@@ -49,13 +49,16 @@ void logger(char *argv[]) {
         } while (*buffer != '\0');
 
         /* read all data even if frammented */
-        int left = atoi(size);
-        int lastIndex = -1;
-        while (left != 0) {
-            count = read(myFifo, &buffer[lastIndex + 1], left);
-            lastIndex += count;
-            left -= count;
-        }
+        // int left = atoi(size);
+        // int lastIndex = 0;
+        // while (left != 0) {
+        //     count = read(myFifo, &buffer[lastIndex], left);
+        //     printf("LAST: %s\tC: %zu\t\n",&buffer[lastIndex], count);
+        //     lastIndex += count;
+        //     left -= count;
+        // }
+
+        count = read(myFifo, buffer, atoi(size));
 
         /* analysing data */
         int inTmp = 0;
@@ -80,7 +83,7 @@ void usr1_handler(int sig) {
 }
 
 void printTxt(char **inputs) {
-    printf("ID:\t\t\t%s\n", "1.1.1");
+    printf("ID:\t\t%s\n", "1.1.1");
     printf("TYPE:\t\t%s\n", inputs[0]);
     printf("COMMAND:\t%s\n", inputs[1]);
     printf("SUBCOMMAND:\t%s\n", inputs[2]);

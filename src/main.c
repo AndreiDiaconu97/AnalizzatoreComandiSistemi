@@ -179,7 +179,7 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    printf("FINISHED\n");
+    printf("\nFINISHED\n");
     //write(toShell, "exit\n", strlen("exit\n"));
     close(toShell[1]);
     close(fromShell[0]);
