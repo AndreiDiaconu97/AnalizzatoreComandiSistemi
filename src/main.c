@@ -12,7 +12,9 @@
 //#include <time.h>
 #include <unistd.h>
 
+bool proceed = false;
 void unpauser(int sig) {
+    proceed = true;
 }
 
 int main(int argc, char *argv[]) {
@@ -162,14 +164,14 @@ int main(int argc, char *argv[]) {
         case '\0':
         case ';':
             segmentcpy(data.cmd, data.origCmd, i, f - 1);
-            executeCommand(toShell[1], fromShell[0], &data, lastIsPipe);
+            executeCommand(toShell[1], fromShell[0], &data, lastIsPipe, &proceed);
             sendData(&data);
             i = f + 1;
             lastIsPipe = false;
             break;
         case '|':
             segmentcpy(data.cmd, data.origCmd, i, f - 1);
-            executeCommand(toShell[1], fromShell[0], &data, lastIsPipe);
+            executeCommand(toShell[1], fromShell[0], &data, lastIsPipe, &proceed);
             sendData(&data);
             i = f + 1;
             lastIsPipe = true;

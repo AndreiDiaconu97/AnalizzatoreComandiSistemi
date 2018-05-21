@@ -62,15 +62,14 @@ void sendData(Pk *data) {
     close(loggerFd);
 }
 
-void executeCommand(int toShell, int fromShell, Pk *data, bool piping) {
+void executeCommand(int toShell, int fromShell, Pk *data, bool piping, bool *proceed) {
     int count;
     char tmp[32];
     sprintf(tmp, "; echo $?; kill -10 %d\n", getpid());
-
     /* write and wait for shell response */
     if (piping) {
         if (data->noOut) {
-            write(toShell, "true|", strlen("true|"));
+            write(toShell, "false|", strlen("false|"));
         } else {
             write(toShell, "echo \"", strlen("echo \""));
             write(toShell, data->out, strlen(data->out));
@@ -79,7 +78,14 @@ void executeCommand(int toShell, int fromShell, Pk *data, bool piping) {
     }
     write(toShell, data->cmd, strlen(data->cmd));
     write(toShell, tmp, strlen(tmp));
-    pause();
+
+    while(1) {
+        if (*proceed == true) {
+            *proceed = false;
+            break;
+        }
+    }
+
 
     /* reading from fifo */
     count = read(fromShell, data->out, PK_O);

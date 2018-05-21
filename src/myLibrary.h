@@ -50,7 +50,7 @@ void showSettings(settings *s);
 /* utility.c */
 void segmentcpy(char *dst, char *src, int from, int to);
 void sendData(Pk *data);
-void executeCommand(int toShell, int fromShell, Pk *data, bool piping);
+void executeCommand(int toShell, int fromShell, Pk *data, bool piping, bool* proceed);
 char *getcTime();
 void rmNewline(char *str);
 
