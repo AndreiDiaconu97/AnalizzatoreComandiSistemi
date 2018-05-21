@@ -1,6 +1,4 @@
-/temp/
-/bin/
-/log/
+*.o
 *.txt
 *.log
 *.json
