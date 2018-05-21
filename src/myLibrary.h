@@ -2,26 +2,30 @@
 #define MYLIBRARY_H_
 #endif
 
-/* leave "." for relative path or assign an absolute path */
-#if !defined(ABS_P)
-#define ABS_P "."
-#endif
-
 /* boolean data type */
 typedef int bool;
 #define true 1
 #define false 0
+
+/* leave "." for relative path or assign an absolute path */
+#ifndef ABS_P
+#define ABS_P "."
+#endif
+
+/* files */
+#ifndef LOG_F
+#define LOG_F "log.txt"
+#endif
+
+#define LOG_FILE_P ABS_P "/logs/"
+#define LOG_PID_F ABS_P "/temp/loggerPid.txt"
+#define LOGGER_FIFO ABS_P "/temp/loggerFifo"
 
 /* MACRO for string lenghts */
 #define PATH_S 512
 #define CMD_S 124 /* given command max length */
 #define OUT_S 124 /* how much of the command output to save on log */
 #define PID_S 10  /* logger process ID max size */
-
-/* file paths */
-#define LOG_FILE ABS_P "/logs/log.txt"
-#define LOG_PID_F ABS_P "/temp/loggerPid.txt"
-#define LOGGER_FIFO ABS_P "/temp/loggerFifo"
 
 /* MACRO for Pack struct */
 #define PK_T 24
@@ -40,8 +44,8 @@ typedef struct Pack {
 
 /* settings container */
 typedef struct Settings {
-    char *logF;
-    char *cmd;
+    char logF[PATH_S];
+    char cmd[CMD_S];
     int maxCmd;
     int maxOut;
     int maxBuff;

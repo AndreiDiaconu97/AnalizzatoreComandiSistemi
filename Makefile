@@ -1,15 +1,15 @@
 #USAGE: just put your source-files folder in the same directory as this Makefile, then follow instructions.
 
 ### MACRO ###
-ABS_P := \"$(shell pwd)\" #project absolute path
+ABS_P := \"$(shell pwd)\"#project absolute path
 SRC := src
 BIN := bin
 TMP := temp
+EXEC := run#executable name
 
 CC := gcc
 CFLAGS := -std=gnu90 -D ABS_P=$(ABS_P)
 
-exec := run #executable name
 srcs := $(wildcard $(SRC)/*.c) # source files
 objs := $(srcs:$(SRC)%.c=$(TMP)%.o) #one '.o' for every '.c' file
 deps := $(wildcard $(SRC)/*.h) # header files
@@ -18,33 +18,41 @@ deps := $(wildcard $(SRC)/*.h) # header files
 .PHONY: DEFAULT help h build b clean c
 ### RULES ###
 DEFAULT:
-	@ echo "type 'help' or 'h' for info"
-	@ echo $(ABS)
+	@ echo "use 'help' or 'h' for info"
 
 help h:
-	@ echo "INFO [command]: description"
-	@ echo "--------------------------------------------------------------------------------"
-	@ echo "[help  | h] :  Lists usable commands."
-	@ echo "[build | b] : Sets up project structure, files and executable."
-	@ echo "[clean | c] : Cancels every file and folder created with [build | b] command."
+	@ echo "-----------------------------------------------------------------------------------------------"
+	@ echo "COMMAND LIST"
+	@ echo "command\t| c :\tdescription"
+	@ echo "-----------------------------------------------------------------------------------------------"
+	@ echo "help\t| h :\tLists usable commands"
+	@ echo "build\t| b :\tSets up project structure, files and executable"
+	@ echo "clean\t| c :\tCancels every file and folder created with [build | b] command"
 	@ echo "\n"
-	@ echo "customizable MACRO list:"
-	@ echo "--------------------------------------------------------------------------------"
-	@ echo "CC  : compiler"
-	@ echo "SRC : source folder relative path"
-	@ echo "BIN : relative path of folder containing executables"
-	@ echo "TMP : temporary files folder relative path"
-	@ echo "(relative path must include the name of the element itself)"
+	@ echo "-----------------------------------------------------------------------------------------------"
+	@ echo "CUSTOMIZABLE MACRO LIST"
+	@ echo "COMMAND\t<value>\t: description" 
+	@ echo "-----------------------------------------------------------------------------------------------"
+	@ echo "EXEC\t<$(EXEC)>\t: executable file name"
+	@ echo "CC\t<$(CC)>\t: compiler"
+	@ echo ""
+	@ echo "ABS_P\t<$(ABS_P)>\t: absolute path of the project\
+		\n\t(needed as string as it is used for C macro)"
+	@ echo "SRC\t<$(SRC)>\t: source folder relative path"
+	@ echo "BIN\t<$(BIN)>\t: relative path of folder containing executables"
+	@ echo "TMP\t<$(BIN)>\t: temporary files folder relative path"
+	@ echo "-----------------------------------------------------------------------------------------------"
+	@ echo "/* relative path must include the name of the element itself */"
 
 clean c:
-	@ rm -f $(BIN)/$(exec) $(TMP)/*.o #$(objs) specialised alternative	(careful about foreign files)
+	@ rm -f $(BIN)/$(EXEC) $(TMP)/*.o #$(objs) specialised alternative	(careful about foreign files)
 	@ rm -rf $(BIN) #$(TMP) "temp" folder may still be in use by the logger
 	@ echo "Project cleaned"
 	
 
-build b: $(BIN)/$(exec)
+build b: $(BIN)/$(EXEC)
 
-$(BIN)/$(exec) : $(BIN) $(TMP) $(objs) #first checks folders
+$(BIN)/$(EXEC) : $(BIN) $(TMP) $(objs) #first checks folders
 	@ echo "\nLinking *.o files..."
 	@ $(CC) -o $@ $(objs)
 	@ echo "Executable is ready, path:'./$@'"

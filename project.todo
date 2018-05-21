@@ -9,6 +9,7 @@ AnalizzatoreComandiSistemi:
       ☐ implement log formatting ("txt" and "csv")
     main.c:
       settings:
+        ☐ @critical implement user customization for MACROed variables
         ☐ improve settings with useful properties
         ☐ maybe can save settings?
       logger setup:
@@ -22,16 +23,9 @@ AnalizzatoreComandiSistemi:
       ✔ ok @done(18-05-10 16:18)
     utility.c:
       ✔ ok @done(18-05-21 16:01)
-  tmp:
-    Check if every file is deleted after project is completed
-    ☐ @low try to put fifo file here
-    ☐ @low try put loggerID file here
-  log:
-    ☐ put log files here
   Makefile:
     ☐ try to hide some commands from tab-suggestions
     ☐ @high Implement user-defined MACRO for compilation
-    ☐ check for rare cases of compiling/linking when not needed
 
 Archive:
   Completed todos will be moved here

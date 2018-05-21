@@ -16,12 +16,9 @@ void initSettings(settings *s) {
     s->maxOut = OUT_S;
     s->maxBuff = s->maxCmd + s->maxOut + 50; /* temporary size */
 
-    char *logfile = malloc(sizeof(char) * PATH_S);
-    char *command = malloc(sizeof(char) * CMD_S);
-    strcpy(logfile, LOG_FILE);
-    strcpy(command, "");
-    s->logF = logfile;
-    s->cmd = command;
+    strcpy(s->logF, LOG_FILE_P);
+    strcat(s->logF, LOG_F);
+    strcpy(s->cmd, "");
 }
 
 /* must return true */
@@ -113,9 +110,9 @@ bool evaluateCommand(settings *s, char *arg, char *val) {
 
 void showSettings(settings *s) {
     printf("--- SETTINGS ---------------------------\n");
-    printf("logfile: %s\n", s->logF);
-    printf("return code: %s\n", s->code ? "true" : "false");
-    printf("command max length: %d\n", s->maxCmd);
-    printf("output max length: %d\n", s->maxOut);
+    printf("logfile:\t%s\n", strrchr(s->logF, '/') + 1);
+    printf("return code:\t%s\n", s->code ? "true" : "false");
+    printf("command max length:\t%d\n", s->maxCmd);
+    printf("output max length:\t%d\n", s->maxOut);
     printf("----------------------------------------\n\n");
 }
