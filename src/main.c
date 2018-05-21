@@ -68,11 +68,8 @@ int main(int argc, char *argv[]) {
             printf("No Daemon\n");
         } else {
             int loggerFd = open(LOGGER_FIFO, O_WRONLY);
-
             kill(loggerID, SIGUSR1);
-            kill(loggerID, SIGCONT);
             waitpid(loggerID, NULL, 0);
-
             close(loggerFd);
             printf("Daemon killed\n");
         }
@@ -81,14 +78,16 @@ int main(int argc, char *argv[]) {
 
     /* fork for logger if no existing one is found */
     if (needNew) {        
+        /* reset fifo file */
         remove(LOGGER_FIFO);
         mkfifo(LOGGER_FIFO, 0777);
 
+        /* fork for logger */
         if ((loggerID = fork()) < 0) {
             perror("logger fork");
             exit(EXIT_FAILURE);
         }
-        if (loggerID == 0) {
+        if (loggerID == 0) { //child
             /* logger must be leader of its own group in order to be a daemon */
             setsid();
 
@@ -97,8 +96,8 @@ int main(int argc, char *argv[]) {
             logger(args);
             printf("Logger error\n");
             exit(EXIT_FAILURE);
-        } else {
-            /* father saves childID on file */
+        } else { //father
+            /* saving childID on file */
             printf("Saving actual logger ID\n");
             sprintf(logIDbuffer, "%d", loggerID);
             pidFD = open(LOG_PID_F, O_WRONLY | O_TRUNC | O_CREAT, 0777);

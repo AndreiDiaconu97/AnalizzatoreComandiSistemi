@@ -5,17 +5,19 @@ AnalizzatoreComandiSistemi:
   Here a TO-DO list for every file, based on folder hierarchy
   src:
     logger.c:
+      ☐ clean argument passing code
       ☐ implement log formatting ("txt" and "csv")
     main.c:
       settings:
         ☐ improve settings with useful properties
         ☐ maybe can save settings?
-      commands:
-        @NB reading uncorrupted output implies that a new shell is needed every time
-        @critical WARNING: commands with no output (only return code) are simulated with "true" when piping
-        ☐ support special symbols for subcommand detection (&&, ||, <, >, |, ;)
-      logger-sending:
+      logger setup:
         ✔ ok @done(18-05-21 16:01)
+      shell setup:
+        ✔ ok @done(18-05-21 18:04)
+      main program:
+        ☐ support special symbols for subcommand detection (&&, ||, <, >, |, ;)
+        ☐ support '(' and ')' in commands
     myLibrary.h:
       ✔ ok @done(18-05-10 16:18)
     utility.c:

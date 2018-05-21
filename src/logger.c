@@ -78,7 +78,6 @@ void logger(char *argv[]) {
 void usr1_handler(int sig) {
     remove(loggerIDfile);
     remove(fifoPipe);
-    remove(LOGGER_QUEUE);
     exit(EXIT_SUCCESS);
 }
 
