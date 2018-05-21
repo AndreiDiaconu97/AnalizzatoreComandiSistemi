@@ -29,26 +29,27 @@ int main(int argc, char *argv[]) {
     }
     showSettings(&sett);
 
-    /* some program variables */
-    int pidFD;
+    /* process IDs */
+    int fatherID = getpid();
     int loggerID;
     int shellID;
-    bool needNew = false;
-    char buffer[sett.maxBuff];
 
     /******************************************************************************/
     /******************************** LOGGER SETUP ********************************/
     /******************************************************************************/
+    int pidFD;
+    bool needNew = false;
+    char logIDbuffer[PID_S];
 
     /* search for existing logger   any forking */
     pidFD = open(LOG_PID_F, O_RDONLY, 0777);
     if (pidFD == -1) {
         needNew = true;
     } else {
-        char logIDbuffer[10];
-        read(pidFD, logIDbuffer, sizeof logIDbuffer);
+        int pIDSize = read(pidFD, logIDbuffer, sizeof logIDbuffer);
+        logIDbuffer[pIDSize] = '\0';
         loggerID = atoi(logIDbuffer);
-        if (getpgid(loggerID) < 0) {
+        if (getpgid(loggerID) < 0) {            
             needNew = true;
         } else {
             int fifoFD = open(LOGGER_FIFO, O_RDWR, 0777);
@@ -61,7 +62,7 @@ int main(int argc, char *argv[]) {
     }
     close(pidFD);
 
-    /* 'kill' special command check */
+    /* 'kill' special command check (kills logger) */
     if (!strcmp(sett.cmd, "kill")) {
         if (needNew) {
             printf("No Daemon\n");
@@ -79,8 +80,8 @@ int main(int argc, char *argv[]) {
     }
 
     /* fork for logger if no existing one is found */
-    if (needNew) {
-        unlink(LOGGER_FIFO);
+    if (needNew) {        
+        remove(LOGGER_FIFO);
         mkfifo(LOGGER_FIFO, 0777);
 
         if ((loggerID = fork()) < 0) {
@@ -99,9 +100,9 @@ int main(int argc, char *argv[]) {
         } else {
             /* father saves childID on file */
             printf("Saving actual logger ID\n");
-            sprintf(buffer, "%d", loggerID);
+            sprintf(logIDbuffer, "%d", loggerID);
             pidFD = open(LOG_PID_F, O_WRONLY | O_TRUNC | O_CREAT, 0777);
-            if (write(pidFD, buffer, strlen(buffer)) == -1) {
+            if (write(pidFD, logIDbuffer, strlen(logIDbuffer)) == -1) {
                 perror("Saving result");
                 exit(EXIT_FAILURE);
             }
@@ -112,7 +113,6 @@ int main(int argc, char *argv[]) {
     /******************************************************************************/
     /********************************* SHELL SETUP ********************************/
     /******************************************************************************/
-
     int toShell[2];
     int fromShell[2];
     pipe(toShell);
@@ -142,38 +142,38 @@ int main(int argc, char *argv[]) {
     /******************************************************************************/
     /********************************* MAIN PROGRAM *******************************/
     /******************************************************************************/
-
-    printf("Father: %d\n", getpid());
+    printf("Father: %d\n", fatherID);
     printf("Logger ID: %d\n", loggerID);
     printf("ShellID: %d\n", shellID);
 
     close(toShell[0]);
     close(fromShell[1]);
     signal(SIGUSR1, unpauser);
-    //int loggerFd;
+
     Pk data;
     strcpy(data.origCmd, sett.cmd);
 
     printf("\nFULL COMMAND: %s\n", data.origCmd);
 
-    int i = 0;
-    int f = 0;
+    /* command factorization */
+    int sx = 0;
+    int dx = 0;
     bool lastIsPipe = false;
-    for (f = 0; f <= strlen(data.origCmd); f++) { // pwd; ls'\0'
-        switch (data.origCmd[f]) {
+    for (dx = 0; dx <= strlen(data.origCmd); dx++) { // pwd; ls'\0'
+        switch (data.origCmd[dx]) {
         case '\0':
         case ';':
-            segmentcpy(data.cmd, data.origCmd, i, f - 1);
+            segmentcpy(data.cmd, data.origCmd, sx, dx - 1);
             executeCommand(toShell[1], fromShell[0], &data, lastIsPipe, &proceed);
             sendData(&data);
-            i = f + 1;
+            sx = dx + 1;
             lastIsPipe = false;
             break;
         case '|':
-            segmentcpy(data.cmd, data.origCmd, i, f - 1);
+            segmentcpy(data.cmd, data.origCmd, sx, dx - 1);
             executeCommand(toShell[1], fromShell[0], &data, lastIsPipe, &proceed);
             sendData(&data);
-            i = f + 1;
+            sx = dx + 1;
             lastIsPipe = true;
             break;
         default:
@@ -182,9 +182,7 @@ int main(int argc, char *argv[]) {
     }
 
     printf("\nFINISHED\n");
-    //write(toShell, "exit\n", strlen("exit\n"));
     close(toShell[1]);
     close(fromShell[0]);
-    waitpid(shellID, NULL, 0); /* NEED ERROR CHECKING HERE */
     return EXIT_SUCCESS;
 }

@@ -2,29 +2,24 @@ AnalizzatoreComandiSistemi:
   ☐ @critical Rename project folder to LABSO1-2017_2018--MAT01_MAT02_MAT03_MAT04
   ☐ Clean code
   ☐ Comment code
-  ☐ @critical change unlink() with remove()
   Here a TO-DO list for every file, based on folder hierarchy
   src:
     logger.c:
       ☐ implement log formatting ("txt" and "csv")
     main.c:
       settings:
-        ☐ @high check why loggerID must be initialised
         ☐ improve settings with useful properties
         ☐ maybe can save settings?
-        commands:
-          @NB reading uncorrupted output implies that a new shell is needed every time
-          @critical WARNING: commands with no output (only return code) are simulated with "true" when piping
-          ☐ support special symbols for subcommand detection (&&, ||, <, >, |, ;)
-          ☐ fix cd command (cd|wc should return 0 0 0)
-          ☐ @critical sometimes process blocks
-          logger-sending:
-        @NB popen() causes broken fifo with commands s.a. "ls" because pclose() is called and there is no time for output on pipe
-        ☐ @low fix fathers concurrency maybe
-        ✔ fix cases of broken return code (check what is capturing the logger) @done(18-05-19 20:00) (switched to single string)
-        myLibrary.h:
+      commands:
+        @NB reading uncorrupted output implies that a new shell is needed every time
+        @critical WARNING: commands with no output (only return code) are simulated with "true" when piping
+        ☐ support special symbols for subcommand detection (&&, ||, <, >, |, ;)
+      logger-sending:
+        ✔ ok @done(18-05-21 16:01)
+    myLibrary.h:
       ✔ ok @done(18-05-10 16:18)
     utility.c:
+      ✔ ok @done(18-05-21 16:01)
   tmp:
     Check if every file is deleted after project is completed
     ☐ @low try to put fifo file here
@@ -51,6 +46,15 @@ Archive:
   ✔ open shell once, get output for every command and subcommand, use echo "output" @started(18-05-16 18:48) @done(18-05-19 00:01) @lasted(2 days 5 hours 13 minutes 54 seconds)
   ✔ implement subcommands output @done(18-05-19 00:02)
   ✔ fix subcommands concurrency @done(18-05-19 16:34)
+  ✔ @critical change unlink() with remove() @done(18-05-21 15:55)
+  ✔ fix cases of broken return code (check what is capturing the logger) @done(18-05-19 20:00) (switched to single string)
+  ✔ @high check why loggerID must be initialised @done(18-05-21 15:55)
+  ✔ @low fix fathers concurrency maybe @done(18-05-21 15:55)
+  ✔ fix cd command (cd|wc should return 0 0 0) @done(18-05-21 15:58) (fixed with true|command)
+  ✔ @critical sometimes process blocks @done(18-05-21 16:00) (implemented boolean for sig.handler)
+
+
+
 
 
 //////////////////////////////////////////////////////////////////////////////////

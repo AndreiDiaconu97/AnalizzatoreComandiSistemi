@@ -50,15 +50,6 @@ void sendData(Pk *data) {
     /* send superstring */
     int loggerFd = open(LOGGER_FIFO, O_WRONLY);
     write(loggerFd, superstring, dataSize + strlen(dataLen) + 1);
-
-    /* multi-send variant (more buggy) */
-    // write(loggerFd, dataLen, strlen(dataLen) + 1);
-    // write(loggerFd, data->outType, outTypeSize);
-    // write(loggerFd, data->origCmd, origCmdSize);
-    // write(loggerFd, data->cmd, cmdSize);
-    // write(loggerFd, data->out, outSize);
-    // write(loggerFd, data->returnC, returnSize);
-    //kill(loggerID, SIGCONT);
     close(loggerFd);
 }
 
@@ -66,6 +57,7 @@ void executeCommand(int toShell, int fromShell, Pk *data, bool piping, bool *pro
     int count;
     char tmp[32];
     sprintf(tmp, "; echo $?; kill -10 %d\n", getpid());
+
     /* write and wait for shell response */
     if (piping) {
         if (data->noOut) {
@@ -79,15 +71,15 @@ void executeCommand(int toShell, int fromShell, Pk *data, bool piping, bool *pro
     write(toShell, data->cmd, strlen(data->cmd));
     write(toShell, tmp, strlen(tmp));
 
-    while(1) {
+    /* wait for shell response */
+    while (1) {
         if (*proceed == true) {
             *proceed = false;
             break;
         }
     }
 
-
-    /* reading from fifo */
+    /* read from pipe */
     count = read(fromShell, data->out, PK_O);
     if (count >= PK_O) {
         printf("Reading from Shell: buffer is too small\nClosing...\n");
@@ -100,7 +92,7 @@ void executeCommand(int toShell, int fromShell, Pk *data, bool piping, bool *pro
         printf("WARNING: got no output from command!\n");
     }
 
-    /* return code */
+    /* get return code */
     char *tmpReturn = strrchr(data->out, '\n');
     if (tmpReturn != NULL) {
         *tmpReturn = '\0';
@@ -112,7 +104,7 @@ void executeCommand(int toShell, int fromShell, Pk *data, bool piping, bool *pro
         data->noOut = true;
     }
 
-    /* output type */
+    /* get output type */
     if (atoi(data->returnC) == 0) {
         strcpy(data->outType, "StdOut");
     } else {
@@ -124,6 +116,7 @@ char *getcTime() {
     time_t current_time;
     char *c_time_string;
     current_time = time(NULL); // current time
+
     if (current_time == ((time_t)-1)) {
         fprintf(stderr, "Failure to obtain the current time.\n");
         exit(EXIT_FAILURE);
@@ -133,10 +126,9 @@ char *getcTime() {
         fprintf(stderr, "Failure to convert the current time.\n");
         exit(EXIT_FAILURE);
     }
-    rmNewline(c_time_string);
-    return c_time_string;
-}
 
-void rmNewline(char *str) {
-    str[strlen(str) - 1] = '\0';
+    /* remove newline char */
+    c_time_string[strlen(c_time_string) - 1] = '\0';
+
+    return c_time_string;
 }
