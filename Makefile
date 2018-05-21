@@ -38,7 +38,7 @@ help h:
 
 clean c:
 	@ rm -f $(BIN)/$(exec) $(TMP)/*.o #$(objs) specialised alternative	(careful about foreign files)
-	@ rmdir $(BIN) #$(TMP) "temp" folder may still be in use by the logger
+	@ rm -rf $(BIN) #$(TMP) "temp" folder may still be in use by the logger
 	@ echo "Project cleaned"
 	
 
