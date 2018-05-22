@@ -9,6 +9,7 @@ AnalizzatoreComandiSistemi:
       ☐ implement log formatting ("txt" and "csv")
     main.c:
       settings:
+        ☐ @critical fix argyments
         ☐ @critical implement user customization for MACROed variables
         ☐ improve settings with useful properties
         ☐ maybe can save settings?

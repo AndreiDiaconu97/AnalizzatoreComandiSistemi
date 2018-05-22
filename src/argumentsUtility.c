@@ -16,8 +16,8 @@ void initSettings(settings *s) {
     s->maxOut = OUT_S;
     s->maxBuff = s->maxCmd + s->maxOut + 50; /* temporary size */
 
-    strcpy(s->logF, LOG_FILE_P);
-    strcat(s->logF, LOG_F);
+    //strcpy(s->logF, LOG_FILE_P);
+    strcpy(s->logF, LOG_F);
     strcpy(s->cmd, "");
 }
 
@@ -34,7 +34,8 @@ bool readArguments(int argc, char **argv, settings *s) {
             strcpy(s->cmd, argv[i]);
         } else { /* find setting arguments */
             /* Arguments are in form '--setting=value',thus  */
-            /* finding the '=' char gives the splitting point.    */
+
+            /* search for '=', if not found search for ' ' separator */
             tmpVal = strchr(argv[i], '=');
             if (tmpVal == NULL) {
                 tmpVal = strchr(argv[i], ' ');
@@ -110,7 +111,7 @@ bool evaluateCommand(settings *s, char *arg, char *val) {
 
 void showSettings(settings *s) {
     printf("--- SETTINGS ---------------------------\n");
-    printf("logfile:\t%s\n", strrchr(s->logF, '/') + 1);
+    printf("logfile:\t%s\n", s->logF); // strrchr(s->logF, '/')
     printf("return code:\t%s\n", s->code ? "true" : "false");
     printf("command max length:\t%d\n", s->maxCmd);
     printf("output max length:\t%d\n", s->maxOut);

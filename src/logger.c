@@ -16,6 +16,10 @@ void printTxt(char **inputs);
 void usr1_handler(int sig);
 
 void logger(char *argv[]) {
+    char logFile[PATH_S];
+    strcpy(logFile, LOG_FILE_P);
+    strcat(logFile, argv[0]);
+
     loggerIDfile = argv[1];
     fifoPipe = argv[2];
 
@@ -33,7 +37,7 @@ void logger(char *argv[]) {
     int myFifo = open(fifoPipe, O_RDWR);
 
     /* open/create log file and move pipe to stdout */
-    int myLog = open(argv[0], O_WRONLY | O_APPEND | O_CREAT, 0777);
+    int myLog = open(logFile, O_WRONLY | O_APPEND | O_CREAT, 0777);
     dup2(myLog, STDOUT_FILENO);
     close(myLog);
 

@@ -47,9 +47,8 @@ int main(int argc, char *argv[]) {
         needNew = true;
     } else {
         int pIDSize = read(pidFD, logIDbuffer, sizeof logIDbuffer);
-        logIDbuffer[pIDSize] = '\0';
         loggerID = atoi(logIDbuffer);
-        if (getpgid(loggerID) < 0) {            
+        if (getpgid(loggerID) < 0) {
             needNew = true;
         } else {
             int fifoFD = open(LOGGER_FIFO, O_RDWR, 0777);
@@ -77,7 +76,7 @@ int main(int argc, char *argv[]) {
     }
 
     /* fork for logger if no existing one is found */
-    if (needNew) {        
+    if (needNew) {
         /* reset fifo file */
         remove(LOGGER_FIFO);
         mkfifo(LOGGER_FIFO, 0777);
@@ -101,7 +100,7 @@ int main(int argc, char *argv[]) {
             printf("Saving actual logger ID\n");
             sprintf(logIDbuffer, "%d", loggerID);
             pidFD = open(LOG_PID_F, O_WRONLY | O_TRUNC | O_CREAT, 0777);
-            if (write(pidFD, logIDbuffer, strlen(logIDbuffer)) == -1) {
+            if (write(pidFD, logIDbuffer, strlen(logIDbuffer) + 1) == -1) {
                 perror("Saving result");
                 exit(EXIT_FAILURE);
             }
@@ -158,26 +157,38 @@ int main(int argc, char *argv[]) {
     int sx = 0;
     int dx = 0;
     bool lastIsPipe = false;
+    bool currentIsPipe = false;
+    bool needToExec = false;
+    int open_p = 0;
     for (dx = 0; dx <= strlen(data.origCmd); dx++) { // pwd; ls'\0'
         switch (data.origCmd[dx]) {
         case '\0':
         case ';':
-            segmentcpy(data.cmd, data.origCmd, sx, dx - 1);
-            executeCommand(toShell[1], fromShell[0], &data, lastIsPipe, &proceed);
-            sendData(&data);
-            sx = dx + 1;
-            lastIsPipe = false;
+            currentIsPipe = false;
+            needToExec = true;
             break;
         case '|':
-            segmentcpy(data.cmd, data.origCmd, sx, dx - 1);
-            executeCommand(toShell[1], fromShell[0], &data, lastIsPipe, &proceed);
-            sendData(&data);
-            sx = dx + 1;
-            lastIsPipe = true;
+            currentIsPipe = true;
+            needToExec = true;
+            break;
+        case '(':
+            open_p++;
+            break;
+        case ')':
+            open_p--;
             break;
         default:
             break;
         }
+
+        if (needToExec && open_p==0) {
+            segmentcpy(data.cmd, data.origCmd, sx, dx - 1);
+            executeCommand(toShell[1], fromShell[0], &data, lastIsPipe, &proceed);
+            sendData(&data);
+            sx = dx + 1;
+            lastIsPipe = currentIsPipe;
+        }
+        needToExec = false;
     }
 
     printf("\nFINISHED\n");
