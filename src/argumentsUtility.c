@@ -93,9 +93,9 @@ void loadSettings(settings *s) {
                 exit(EXIT_FAILURE);
             }
             value += 2; /* move to value position */
-            if (strcmp(value, "true\n")) {
+            if (!strcmp(value, "true\n")) {
                 s->code = true;
-            } else if (strcmp(value, "false\n")) {
+            } else if (!strcmp(value, "false\n")) {
                 s->code = false;
             } else {
                 printf("code: Invalid value\n");
@@ -111,6 +111,7 @@ void loadSettings(settings *s) {
             printf("Reading error");
             exit(EXIT_FAILURE);
         }
+        printf("Setting loaded\n");
     } else {
         perror("Loading setting from file");
         exit(EXIT_FAILURE);

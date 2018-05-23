@@ -11,6 +11,7 @@ Here a TO-DO list for every file
       ☐ @critical implement user customization for MACROed variables
       ☐ improve settings with useful properties
       ☐ maybe can compress code about settings (especially loadSettings())
+      ☐ @critical automatically restart logger if settings changed
     logger setup:
       ✔ ok @done(18-05-21 16:01)
     shell setup:
