@@ -12,6 +12,7 @@
 //#include <time.h>
 #include <unistd.h>
 
+/* handler for SIGUSR1 signal used for father-shell communication */
 bool proceed = false;
 void unpauser(int sig) {
     proceed = true;
@@ -22,14 +23,27 @@ int main(int argc, char *argv[]) {
     settings sett;
     initSettings(&sett);
 
+    bool updateSettings = false;
     /* read and check user arguments */
-    if (!readArguments(argc, argv, &sett)) {
+    if (!readArguments(argc, argv, &sett, &updateSettings)) {
         printf("CLOSING PROGRAM\n");
         exit(EXIT_FAILURE);
     }
+
+    printInfo(&sett);
     showSettings(&sett);
 
-    /* process IDs */
+    saveSettings(&sett);
+    loadSettings(&sett);
+    showSettings(&sett);
+
+    /* close program if command is empty */
+    if (strcmp(sett.cmd, "") == 0) {
+        printf("No command found, closing...\n");
+        exit(EXIT_FAILURE);
+    }
+
+    /* processes IDs */
     int fatherID = getpid();
     int loggerID;
     int shellID;
@@ -61,22 +75,33 @@ int main(int argc, char *argv[]) {
     }
     close(pidFD);
 
+    if (updateSettings) {
+        //saveSettings(&sett);
+        printf("Settings updated\n");
+        if (!needNew) {
+            printf("kill and start logger again in order to apply latest settings\n");
+        }
+        printf("\n");
+    }
+
     /* 'kill' special command check (kills logger) */
     if (!strcmp(sett.cmd, "kill")) {
         if (needNew) {
-            printf("No Daemon\n");
+            printf("No logger\n");
         } else {
             int loggerFd = open(LOGGER_FIFO, O_WRONLY);
             kill(loggerID, SIGUSR1);
             waitpid(loggerID, NULL, 0);
             close(loggerFd);
-            printf("Daemon killed\n");
+            printf("Logger killed\n");
         }
         exit(EXIT_SUCCESS);
     }
 
     /* fork for logger if no existing one is found */
     if (needNew) {
+        printf("Initialising new logger process\n\n");
+
         /* reset fifo file */
         remove(LOGGER_FIFO);
         mkfifo(LOGGER_FIFO, 0777);
@@ -91,13 +116,11 @@ int main(int argc, char *argv[]) {
             setsid();
 
             /* logger call with appropriate arguments */
-            char *args[3] = {sett.logF, LOG_PID_F, LOGGER_FIFO};
-            logger(args);
+            logger(&sett);
             printf("Logger error\n");
             exit(EXIT_FAILURE);
         } else { //father
             /* saving childID on file */
-            printf("Saving actual logger ID\n");
             sprintf(logIDbuffer, "%d", loggerID);
             pidFD = open(LOG_PID_F, O_WRONLY | O_TRUNC | O_CREAT, 0777);
             if (write(pidFD, logIDbuffer, strlen(logIDbuffer) + 1) == -1) {
@@ -106,6 +129,8 @@ int main(int argc, char *argv[]) {
             }
             close(pidFD);
         }
+    } else {
+        printf("Existing logger found\n\n");
     }
 
     /******************************************************************************/
@@ -140,9 +165,9 @@ int main(int argc, char *argv[]) {
     /******************************************************************************/
     /********************************* MAIN PROGRAM *******************************/
     /******************************************************************************/
-    printf("Father: %d\n", fatherID);
+    printf("Father ID: %d\n", fatherID);
     printf("Logger ID: %d\n", loggerID);
-    printf("ShellID: %d\n", shellID);
+    printf("Shell  ID: %d\n", shellID);
 
     close(toShell[0]);
     close(fromShell[1]);
@@ -151,7 +176,7 @@ int main(int argc, char *argv[]) {
     Pk data;
     strcpy(data.origCmd, sett.cmd);
 
-    printf("\nFULL COMMAND: %s\n", data.origCmd);
+    printf("\nCommand: %s\n", data.origCmd);
 
     /* command factorization */
     int sx = 0;
@@ -181,7 +206,7 @@ int main(int argc, char *argv[]) {
             break;
         }
 
-        if (needToExec && open_p==0) {
+        if (needToExec && open_p == 0) {
             segmentcpy(data.cmd, data.origCmd, sx, dx - 1);
             executeCommand(toShell[1], fromShell[0], &data, lastIsPipe, &proceed);
             sendData(&data);
@@ -192,6 +217,8 @@ int main(int argc, char *argv[]) {
     }
 
     printf("\nFINISHED\n");
+
+    /* close opened pipes */
     close(toShell[1]);
     close(fromShell[0]);
     return EXIT_SUCCESS;

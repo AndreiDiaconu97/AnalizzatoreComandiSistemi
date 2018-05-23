@@ -2,32 +2,27 @@ AnalizzatoreComandiSistemi:
   ☐ @critical Rename project folder to LABSO1-2017_2018--MAT01_MAT02_MAT03_MAT04
   ☐ Clean code
   ☐ Comment code
-  Here a TO-DO list for every file, based on folder hierarchy
-  src:
-    logger.c:
-      ☐ clean argument passing code
-      ☐ implement log formatting ("txt" and "csv")
-    main.c:
-      settings:
-        ☐ @critical fix argyments
-        ☐ @critical implement user customization for MACROed variables
-        ☐ improve settings with useful properties
-        ☐ maybe can save settings?
-      logger setup:
-        ✔ ok @done(18-05-21 16:01)
-      shell setup:
-        ✔ ok @done(18-05-21 18:04)
-      main program:
-        ☐ support special symbols for subcommand detection (&&, ||, <, >, |, ;)
-        ☐ support '(' and ')' in commands
-    myLibrary.h:
-      ✔ ok @done(18-05-10 16:18)
-    utility.c:
-      ✔ ok @done(18-05-21 16:01)
-  Makefile:
-    ☐ try to hide some commands from tab-suggestions
-    ☐ @high Implement user-defined MACRO for compilation
 
+Here a TO-DO list for every file
+  logger.c:
+    ☐ implement log formatting ("txt" and "csv")
+  main.c:
+    settings:
+      ☐ @critical implement user customization for MACROed variables
+      ☐ improve settings with useful properties
+      ☐ maybe can compress code about settings (especially loadSettings())
+    logger setup:
+      ✔ ok @done(18-05-21 16:01)
+    shell setup:
+      ✔ ok @done(18-05-21 18:04)
+    main program:
+      ☐ support special symbols for subcommand detection (&&, ||, <, >, |, ;)
+  myLibrary.h:
+    ✔ ok @done(18-05-10 16:18)
+  utility.c:
+    ✔ ok @done(18-05-21 16:01)
+  Makefile:
+    ✔ ok @done(18-05-23 23:35)
 Archive:
   Completed todos will be moved here
   ✔ @high check buffers when using all of them or more @done(18-05-12 19:01)
@@ -49,48 +44,9 @@ Archive:
   ✔ @low fix fathers concurrency maybe @done(18-05-21 15:55)
   ✔ fix cd command (cd|wc should return 0 0 0) @done(18-05-21 15:58) (fixed with true|command)
   ✔ @critical sometimes process blocks @done(18-05-21 16:00) (implemented boolean for sig.handler)
-
-
-
-
-
-//////////////////////////////////////////////////////////////////////////////////
-
-
-::TODO guide::
-
-New:
-  ☐ Press Cmd/Ctrl+Enter to add a new todo
-Done:
-  ✔ Press Alt+D to mark a todo as done @done(18-05-10 16:04)
-  ✔ Press it again to undo the action
-Cancel:
-  ✘ Press Alt+C to mark a todo as cancelled
-  ✘ Press it again to undo the action
-Tagging:
-  ☐ You can add tags using the @ sign, like this @tag
-  ☐ There are some special, customizable tags: @critical @high @low @today
-Timekeeping:
-  ✔ Completed todos can show a timestamp @done(17-11-03 10:42)
-  ☐ Press Alt+S to mark a todo as started @started(17-11-03 10:42)
-    ✔ Now it will show the elapsed time @started(17-11-03 10:42) @done(17-11-03 20:11) @lasted(9 hours 29 minutes)
-
-Style:
-  We support a markdown-like syntax for styling text
-  Bold:
-    ☐ Use asterisks for *bold*
-  Italic:
-    ☐ Use underscores for _italic_
-  Strikethrough:
-    ☐ Use tildes for ~strikethrough~
-
-Code:
-  ☐ You can embed custom `code` pretty much anywhere
-  ☐ Even ```
-      multi-line
-      code blocks
-      are supported
-    ```
-Archive:
-  ✔ Completed todos will be moved here
-  ✔ Congratulations, you are now a Todo+ master!
+  ✔ clean argument passing code @done(18-05-23 23:30)
+  ✔ @critical fix argyments @done(18-05-23 23:29)
+  ✔ maybe can save settings? @done(18-05-23 23:29)
+  ✔ support '(' and ')' in commands @done(18-05-23 23:30)
+  ✘ try to hide some commands from tab-suggestions @cancelled(18-05-23 23:34) no way?
+  ✔ @high Implement user-defined MACRO for compilation @done(18-05-23 23:35)

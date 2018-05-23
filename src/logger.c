@@ -4,37 +4,48 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-//#include <sys/stat.h>
-//#include <sys/types.h>
-//#include <syslog.h>
 #include <unistd.h>
 
-char *loggerIDfile;
-char *fifoPipe;
+enum received_data {
+    TYPE,
+    CMD,
+    SUB_CMD,
+    OUT,
+    CODE
+};
 
-void printTxt(char **inputs);
+void printTxt(char **inputs, settings *s);
 void usr1_handler(int sig);
 
-void logger(char *argv[]) {
-    char logFile[PATH_S];
-    strcpy(logFile, LOG_FILE_P);
-    strcat(logFile, argv[0]);
-
-    loggerIDfile = argv[1];
-    fifoPipe = argv[2];
-
-    /* logger is closed with a custom signal handler */
+/**
+ * this function is meant to run in a separate process as a daemon in background;
+ * it loops indefinitely and blocks if there is no data in the fifo used;
+ * if new data is received it proceeds to read only one "packet" at time.
+ * -
+ * Packets received begin with a string representing an integer,
+ * this string tells the exact amount of data to read for the given packet, thus,
+ * there is no risk to read unexpected data.
+ * -
+ * Even if packet is safely read, it must have a precise structure in order to
+ * successfully extract data from it.
+ * -
+ * Packet structure is directly connnected to the 'Pack' struct.
+ **/
+void logger(settings *s) {
+    /* logger is closed with a custom signal */
     signal(SIGUSR1, usr1_handler);
 
-    /* allocations needed */
-    ssize_t count = 0;
-    char buffer[2 * CMD_S + PK_T + PK_O + PK_R];
-    int inNum = 5;
-    char *inputs[inNum];
-    char size[65];
+    char logFile[PATH_S];
+    strcpy(logFile, LOG_FILE_P);
+    strcat(logFile, s->logF);
 
-    /* open FIFO from reading side */
-    int myFifo = open(fifoPipe, O_RDWR);
+    char buffer[2 * s->maxCmd + PK_T + PK_O + PK_R]; /* must contain data received for a single comand */
+    char *inputs[s->packFields];                     /* used to reference different parts of the buffer */
+    char size[65];                                   /* not too big, must contain a string representing just an integer */
+    int count = 0;
+
+    /* open FIFO in read/write mode so it block when no data is received */
+    int myFifo = open(LOGGER_FIFO, O_RDWR);
 
     /* open/create log file and move pipe to stdout */
     int myLog = open(logFile, O_WRONLY | O_APPEND | O_CREAT, 0777);
@@ -43,24 +54,12 @@ void logger(char *argv[]) {
 
     ///* actual program *///
     while (1) {
-        //kill(getpid(), SIGSTOP);
-
         /* read next data-packet size */
         size[0] = '\0';
         do {
             read(myFifo, buffer, 1);
             strncat(size, buffer, 1);
         } while (*buffer != '\0');
-
-        /* read all data even if frammented */
-        // int left = atoi(size);
-        // int lastIndex = 0;
-        // while (left != 0) {
-        //     count = read(myFifo, &buffer[lastIndex], left);
-        //     printf("LAST: %s\tC: %zu\t\n",&buffer[lastIndex], count);
-        //     lastIndex += count;
-        //     left -= count;
-        // }
 
         count = read(myFifo, buffer, atoi(size));
 
@@ -75,24 +74,26 @@ void logger(char *argv[]) {
         }
 
         printf("SIZE:\t%s\n", size);
-        printTxt(inputs);
+        printTxt(inputs, s);
     }
 }
 
 void usr1_handler(int sig) {
-    remove(loggerIDfile);
-    remove(fifoPipe);
+    remove(LOG_PID_F);
+    remove(LOGGER_FIFO);
     exit(EXIT_SUCCESS);
 }
 
-void printTxt(char **inputs) {
+void printTxt(char **inputs, settings *s) {
     printf("ID:\t\t%s\n", "1.1.1");
-    printf("TYPE:\t\t%s\n", inputs[0]);
-    printf("COMMAND:\t%s\n", inputs[1]);
-    printf("SUBCOMMAND:\t%s\n", inputs[2]);
+    printf("TYPE:\t\t%s\n", inputs[TYPE]);
+    printf("COMMAND:\t%s\n", inputs[CMD]);
+    printf("SUBCOMMAND:\t%s\n", inputs[SUB_CMD]);
     char *c_time_string = getcTime();
     printf("DATE:\t\t%s\n", c_time_string);
-    printf("OUTPUT:\n\n%s\n\n", inputs[3]);
-    printf("RETURN CODE: %s\n", inputs[4]);
+    printf("OUTPUT:\n\n%s\n\n", inputs[OUT]);
+    if (s->code) {
+        printf("RETURN CODE: %s\n", inputs[CODE]);
+    }
     printf("---------------------------------------------------\n");
 }
