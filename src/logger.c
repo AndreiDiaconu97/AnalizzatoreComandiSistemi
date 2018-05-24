@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <errno.h>
 
 enum received_data {
     TYPE,
@@ -35,19 +36,23 @@ void logger(settings *s) {
     /* logger is closed with a custom signal */
     signal(SIGUSR1, usr1_handler);
 
-    char logFile[PATH_S];
-    strcpy(logFile, LOG_FILE_P);
-    strcat(logFile, s->logF);
-
     char buffer[2 * s->maxCmd + PK_T + PK_O + PK_R]; /* must contain data received for a single comand */
     char *inputs[s->packFields];                     /* used to reference different parts of the buffer */
     char size[65];                                   /* not too big, must contain a string representing just an integer */
     int count = 0;
 
     /* open FIFO in read/write mode so it block when no data is received */
-    int myFifo = open(LOGGER_FIFO, O_RDWR);
+    int myFifo = open(ABS_P TEMP_DIR LOGGER_FIFO_F, O_RDWR, 0777);
 
+    /* create log folder if non-existant and check for errors */
+    if (mkdir(ABS_P LOG_DIR, 0777) && errno != EEXIST) {
+        printf("Error while trying to create %s folder\n", CONFIG_DIR);
+    }
     /* open/create log file and move pipe to stdout */
+    char logFile[PATH_S];
+    strcpy(logFile, ABS_P LOG_DIR);
+    strcat(logFile, s->logF);
+
     int myLog = open(logFile, O_WRONLY | O_APPEND | O_CREAT, 0777);
     dup2(myLog, STDOUT_FILENO);
     close(myLog);
@@ -79,8 +84,8 @@ void logger(settings *s) {
 }
 
 void usr1_handler(int sig) {
-    remove(LOG_PID_F);
-    remove(LOGGER_FIFO);
+    remove(ABS_P TEMP_DIR LOG_PID_F);
+    remove(ABS_P TEMP_DIR LOGGER_FIFO_F);
     exit(EXIT_SUCCESS);
 }
 

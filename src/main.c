@@ -8,7 +8,6 @@
 #include <sys/stat.h>
 //#include <sys/types.h>
 #include <sys/wait.h>
-//#include <syslog.h>
 //#include <time.h>
 #include <unistd.h>
 
@@ -55,8 +54,8 @@ int main(int argc, char *argv[]) {
     bool needNew = false;
     char logIDbuffer[PID_S];
 
-    /* search for existing logger   any forking */
-    pidFD = open(LOG_PID_F, O_RDONLY, 0777);
+    /* search for existing logger before any forking */
+    pidFD = open(ABS_P TEMP_DIR LOG_PID_F, O_RDONLY, 0777);
     if (pidFD == -1) {
         needNew = true;
     } else {
@@ -65,7 +64,7 @@ int main(int argc, char *argv[]) {
         if (getpgid(loggerID) < 0) {
             needNew = true;
         } else {
-            int fifoFD = open(LOGGER_FIFO, O_RDWR, 0777);
+            int fifoFD = open(ABS_P TEMP_DIR LOGGER_FIFO_F, O_RDWR, 0777);
             if (fifoFD == -1) {
                 needNew = true;
                 kill(loggerID, SIGKILL);
@@ -80,6 +79,7 @@ int main(int argc, char *argv[]) {
         printf("Settings updated\n");
         if (!needNew) {
             printf("kill and start logger again in order to apply latest settings\n");
+            //restartLogger();
         }
         printf("\n");
     }
@@ -89,7 +89,7 @@ int main(int argc, char *argv[]) {
         if (needNew) {
             printf("No logger\n");
         } else {
-            int loggerFd = open(LOGGER_FIFO, O_WRONLY);
+            int loggerFd = open(ABS_P TEMP_DIR LOGGER_FIFO_F, O_WRONLY);
             kill(loggerID, SIGUSR1);
             waitpid(loggerID, NULL, 0);
             close(loggerFd);
@@ -103,8 +103,8 @@ int main(int argc, char *argv[]) {
         printf("Initialising new logger process\n\n");
 
         /* reset fifo file */
-        remove(LOGGER_FIFO);
-        mkfifo(LOGGER_FIFO, 0777);
+        remove(ABS_P TEMP_DIR LOGGER_FIFO_F);
+        mkfifo(ABS_P TEMP_DIR LOGGER_FIFO_F, 0777);
 
         /* fork for logger */
         if ((loggerID = fork()) < 0) {
@@ -122,7 +122,7 @@ int main(int argc, char *argv[]) {
         } else { //father
             /* saving childID on file */
             sprintf(logIDbuffer, "%d", loggerID);
-            pidFD = open(LOG_PID_F, O_WRONLY | O_TRUNC | O_CREAT, 0777);
+            pidFD = open(ABS_P TEMP_DIR LOG_PID_F, O_WRONLY | O_TRUNC | O_CREAT, 0777);
             if (write(pidFD, logIDbuffer, strlen(logIDbuffer) + 1) == -1) {
                 perror("Saving result");
                 exit(EXIT_FAILURE);
@@ -156,8 +156,10 @@ int main(int argc, char *argv[]) {
         close(fromShell[0]);
         close(fromShell[1]);
 
+        /* open shell just once per program */
         char *arguments[] = {"sh", 0};
         execvp(arguments[0], arguments);
+
         perror("shell process");
         exit(EXIT_FAILURE);
     }
@@ -185,7 +187,7 @@ int main(int argc, char *argv[]) {
     bool currentIsPipe = false;
     bool needToExec = false;
     int open_p = 0;
-    for (dx = 0; dx <= strlen(data.origCmd); dx++) { // pwd; ls'\0'
+    for (dx = 0; dx <= strlen(data.origCmd); dx++) {
         switch (data.origCmd[dx]) {
         case '\0':
         case ';':

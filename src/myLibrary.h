@@ -7,24 +7,47 @@ typedef int bool;
 #define true 1
 #define false 0
 
+/* ------------------------------------------------------------------------------ */
+/** following macro can be used toghether for pathing in the specified form:
+ * -
+ * ABS_P XXX_DIR XXX_F
+ * -
+ * where:
+ *  ABS_P is the absolute path of the project's main directory
+ *  XXX_DIR is a directory name
+ *  XXX_F is a file name
+ **/
+
 /* leave "." for relative path or assign an absolute path (through complier) */
 #ifndef ABS_P
 #define ABS_P "."
 #endif
 
-/* files */
+/* default directories */
+#define LOG_DIR "/logs/"
+#define TEMP_DIR "/temp/"
+#define CONFIG_DIR "/config/"
+
+/* default file names */
 #ifndef LOG_F
 #define LOG_F "log.txt"
 #endif
 
-#define LOG_FILE_P ABS_P "/logs/"
+#ifndef LOG_PID_F
+#define LOG_PID_F "loggerPid.txt"
+#endif
 
-/* macro not meant for user */
-#define LOG_PID_F ABS_P "/temp/loggerPid.txt"
-#define LOGGER_FIFO ABS_P "/temp/loggerFifo"
-#define SETTINGS_F ABS_P "/config/user_settings.txt"
+#ifndef LOGGER_FIFO_F
+#define LOGGER_FIFO_F "loggerFifo"
+#endif
 
-/* MACRO for string lenghts */
+#ifndef SETTINGS_F
+#define SETTINGS_F "user_settings.txt"
+#endif
+/* ------------------------------------------------------------------------------ */
+
+
+/* string lenghts */
 #define PATH_S 512
 #define CMD_S 124 /* given command max length */
 #define OUT_S 124 /* how much of the command output to save on log */
@@ -66,12 +89,11 @@ typedef struct Settings {
     int packFields;
 } settings;
 
-
 /* argumentsUtility.c */
 void initSettings(settings *s);
 void saveSettings(settings *s);
 void loadSettings(settings *s);
-bool readArguments(int argc, char **argv, settings *s, bool* updateSettings);
+bool readArguments(int argc, char **argv, settings *s, bool *updateSettings);
 bool evaluateCommand(settings *s, char *arg, char *val);
 void showSettings(settings *s);
 void printInfo(settings *s);

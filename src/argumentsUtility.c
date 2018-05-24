@@ -1,4 +1,5 @@
 #include "myLibrary.h"
+#include <errno.h>
 #include <fcntl.h>
 #include <signal.h>
 #include <stdio.h>
@@ -8,12 +9,11 @@
 //#include <sys/types.h>
 //#include <syslog.h>
 //#include <time.h>
-//#include <unistd.h>
+#include <unistd.h>
 
 void initSettings(settings *s) {
-    int settFd;
-
     /* default settings */
+
     strcpy(s->logF, LOG_F);
     strcpy(s->cmd, "");
 
@@ -34,7 +34,7 @@ void loadSettings(settings *s) {
 
     int readError = false;
 
-    if (settFp = fopen(SETTINGS_F, "r")) {
+    if (settFp = fopen(ABS_P CONFIG_DIR SETTINGS_F, "r")) {
         /* discard first line */
         if (getline(&line, &len, settFp) == -1) {
             readError = true;
@@ -122,7 +122,12 @@ void saveSettings(settings *s) {
     int settFd;
     char num[20];
 
-    if (settFd = open(SETTINGS_F, O_WRONLY | O_TRUNC | O_CREAT, 0777)) {
+    /* create config folder if non-existant and check for errors */
+    if (mkdir(ABS_P CONFIG_DIR, 0777) && errno != EEXIST) {
+        printf("Error while trying to create %s folder\n", CONFIG_DIR);
+    }
+    /* create config file in non-existant and save data from a settings struct */
+    if (settFd = open(ABS_P CONFIG_DIR SETTINGS_F, O_WRONLY | O_TRUNC | O_CREAT, 0777)) {
         write(settFd, "---- USER SETTINGS --------------------------\n", 46);
 
         write(settFd, "LOG_NAME#\t", strlen("LOG_NAME#\t"));

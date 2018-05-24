@@ -31,7 +31,7 @@ void sendData(Pk *data) {
     char dataLen[65];
     sprintf(dataLen, "%d", dataSize);
 
-    /* concatenating all data on single string */
+    /* concatenate all data in one single string */
     int i = 0;
     char superstring[dataSize + strlen(dataLen) + 1];
     strcpy(&superstring[i], dataLen);
@@ -48,7 +48,7 @@ void sendData(Pk *data) {
     i += returnSize;
 
     /* send superstring */
-    int loggerFd = open(LOGGER_FIFO, O_WRONLY);
+    int loggerFd = open(ABS_P TEMP_DIR LOGGER_FIFO_F, O_WRONLY);
     write(loggerFd, superstring, dataSize + strlen(dataLen) + 1);
     close(loggerFd);
 }
@@ -126,7 +126,6 @@ char *getcTime() {
         fprintf(stderr, "Failure to convert the current time.\n");
         exit(EXIT_FAILURE);
     }
-
     /* remove newline char */
     c_time_string[strlen(c_time_string) - 1] = '\0';
 
