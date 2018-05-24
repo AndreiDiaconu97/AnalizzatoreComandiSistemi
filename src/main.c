@@ -28,13 +28,7 @@ int main(int argc, char *argv[]) {
         printf("CLOSING PROGRAM\n");
         exit(EXIT_FAILURE);
     }
-
     printInfo(&sett);
-    showSettings(&sett);
-
-    saveSettings(&sett);
-    loadSettings(&sett);
-    showSettings(&sett);
 
     /* close program if command is empty */
     if (strcmp(sett.cmd, "") == 0) {
@@ -55,7 +49,7 @@ int main(int argc, char *argv[]) {
     char logIDbuffer[PID_S];
 
     /* search for existing logger before any forking */
-    pidFD = open(ABS_P  TEMP_DIR  LOG_PID_F, O_RDONLY, 0777);
+    pidFD = open(HOME TEMP_DIR LOG_PID_F, O_RDONLY, 0777);
     if (pidFD == -1) {
         needNew = true;
     } else {
@@ -64,7 +58,7 @@ int main(int argc, char *argv[]) {
         if (getpgid(loggerID) < 0) {
             needNew = true;
         } else {
-            int fifoFD = open(ABS_P  TEMP_DIR  LOGGER_FIFO_F, O_RDWR, 0777);
+            int fifoFD = open(HOME TEMP_DIR LOGGER_FIFO_F, O_RDWR, 0777);
             if (fifoFD == -1) {
                 needNew = true;
                 kill(loggerID, SIGKILL);
@@ -74,12 +68,17 @@ int main(int argc, char *argv[]) {
     }
     close(pidFD);
 
+    /** Update settings file and logger if found user arguments.
+     * (deas not check for differences in settings file, always replace)
+    **/
     if (updateSettings) {
-        //saveSettings(&sett);
-        printf("Settings updated\n");
+        saveSettings(&sett);
         if (!needNew) {
-            printf("kill and start logger again in order to apply latest settings\n");
-            //restartLogger();
+            printf("Restarting logger process in order to apply latest settings...\n");
+            /* restart logger */
+            killLogger(loggerID);
+            needNew = true;
+            printf("Logger restarted\n");
         }
         printf("\n");
     }
@@ -89,11 +88,7 @@ int main(int argc, char *argv[]) {
         if (needNew) {
             printf("No logger\n");
         } else {
-            int loggerFd = open(ABS_P  TEMP_DIR  LOGGER_FIFO_F, O_WRONLY);
-            kill(loggerID, SIGUSR1);
-            waitpid(loggerID, NULL, 0);
-            close(loggerFd);
-            printf("Logger killed\n");
+            killLogger(loggerID);
         }
         exit(EXIT_SUCCESS);
     }
@@ -103,8 +98,8 @@ int main(int argc, char *argv[]) {
         printf("Initialising new logger process\n\n");
 
         /* reset fifo file */
-        remove(ABS_P  TEMP_DIR  LOGGER_FIFO_F);
-        mkfifo(ABS_P  TEMP_DIR  LOGGER_FIFO_F, 0777);
+        remove(HOME TEMP_DIR LOGGER_FIFO_F);
+        mkfifo(HOME TEMP_DIR LOGGER_FIFO_F, 0777);
 
         /* fork for logger */
         if ((loggerID = fork()) < 0) {
@@ -122,7 +117,7 @@ int main(int argc, char *argv[]) {
         } else { //father
             /* saving childID on file */
             sprintf(logIDbuffer, "%d", loggerID);
-            pidFD = open(ABS_P  TEMP_DIR  LOG_PID_F, O_WRONLY | O_TRUNC | O_CREAT, 0777);
+            pidFD = open(HOME TEMP_DIR LOG_PID_F, O_WRONLY | O_TRUNC | O_CREAT, 0777);
             if (write(pidFD, logIDbuffer, strlen(logIDbuffer) + 1) == -1) {
                 perror("Saving result");
                 exit(EXIT_FAILURE);
@@ -211,7 +206,7 @@ int main(int argc, char *argv[]) {
         if (needToExec && open_p == 0) {
             segmentcpy(data.cmd, data.origCmd, sx, dx - 1);
             executeCommand(toShell[1], fromShell[0], &data, lastIsPipe, &proceed);
-            sendData(&data);
+            sendData(&data, &sett);
             sx = dx + 1;
             lastIsPipe = currentIsPipe;
         }

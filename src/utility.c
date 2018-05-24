@@ -19,13 +19,20 @@ void segmentcpy(char *dst, char *src, int from, int to) {
     dst[to - from + 1] = '\0';
 }
 
-void sendData(Pk *data) {
+void sendData(Pk *data, settings *s) {
     /* elements lengths */
     int outTypeSize = strlen(data->outType) + 1;
     int origCmdSize = strlen(data->origCmd) + 1;
     int cmdSize = strlen(data->cmd) + 1;
-    int outSize = strlen(data->out) + 1;
     int returnSize = strlen(data->returnC) + 1;
+
+    /* limit output printed on log */
+    int outSize;
+    if (s->maxOut < strlen(data->out) + 1) {
+        outSize = s->maxOut;
+    } else {
+        outSize = strlen(data->out) + 1;
+    }
     int dataSize = outTypeSize + origCmdSize + cmdSize + outSize + returnSize;
 
     char dataLen[65];
@@ -48,7 +55,7 @@ void sendData(Pk *data) {
     i += returnSize;
 
     /* send superstring */
-    int loggerFd = open(ABS_P  TEMP_DIR  LOGGER_FIFO_F, O_WRONLY);
+    int loggerFd = open(HOME TEMP_DIR LOGGER_FIFO_F, O_WRONLY);
     write(loggerFd, superstring, dataSize + strlen(dataLen) + 1);
     close(loggerFd);
 }
@@ -110,6 +117,13 @@ void executeCommand(int toShell, int fromShell, Pk *data, bool piping, bool *pro
     } else {
         strcpy(data->outType, "StdErr");
     }
+}
+
+/* send custom signal to logger which will kill it after emtying the pipe */
+void killLogger(int loggerID) {
+    kill(loggerID, SIGUSR1);
+    waitpid(loggerID, NULL, 0);
+    printf("Logger killed\n");
 }
 
 char *getcTime() {

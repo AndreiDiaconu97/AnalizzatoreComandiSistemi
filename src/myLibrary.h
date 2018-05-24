@@ -10,17 +10,17 @@ typedef int bool;
 /* ------------------------------------------------------------------------------ */
 /** following macro can be used toghether for pathing in the specified form:
  * -
- * ABS_P XXX_DIR XXX_F
+ * HOME XXX_DIR XXX_F
  * -
  * where:
- *  ABS_P is the absolute path of the project's main directory
+ *  HOME is the absolute path of the project's main directory
  *  XXX_DIR is a directory name
  *  XXX_F is a file name
  **/
 
 /* leave "." for relative path or assign an absolute path (through complier) */
-#ifndef ABS_P
-#define ABS_P "."
+#ifndef HOME
+#define HOME "."
 #endif
 
 /* default directories */
@@ -53,7 +53,6 @@ typedef int bool;
 #define SETTINGS_F "user_settings.txt"
 #endif
 /* ------------------------------------------------------------------------------ */
-
 
 /* string lenghts */
 #define PATH_S 512
@@ -99,8 +98,9 @@ typedef struct Settings {
 
 /* argumentsUtility.c */
 void initSettings(settings *s);
-void saveSettings(settings *s);
-void loadSettings(settings *s);
+void resetSettings(settings *s);
+bool saveSettings(settings *s);
+bool loadSettings(settings *s);
 bool readArguments(int argc, char **argv, settings *s, bool *updateSettings);
 bool evaluateCommand(settings *s, char *arg, char *val);
 void showSettings(settings *s);
@@ -108,8 +108,9 @@ void printInfo(settings *s);
 
 /* utility.c */
 void segmentcpy(char *dst, char *src, int from, int to);
-void sendData(Pk *data);
+void sendData(Pk *data, settings *s);
 void executeCommand(int toShell, int fromShell, Pk *data, bool piping, bool *proceed);
+void killLogger(int loggerID);
 char *getcTime();
 
 /* logger.c */

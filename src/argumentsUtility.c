@@ -12,29 +12,42 @@
 #include <unistd.h>
 
 void initSettings(settings *s) {
-    /* default settings */
-
-    strcpy(s->logF, LOG_F);
     strcpy(s->cmd, "");
+    s->packFields = 5;
+    s->printInfo = false;
+
+    /* check for existing user configuration */
+    if (!loadSettings(s)) {
+        printf("creating new file...\n");
+
+        resetSettings(s);
+    }
+}
+
+void resetSettings(settings *s) {
+    /* restore default settings */
+    strcpy(s->logF, LOG_F);
 
     s->maxCmd = CMD_S;
     s->maxOut = OUT_S;
-
     s->code = true;
-    s->printInfo = false;
 
-    s->packFields = 5;
+    /* save default settings */
+    if (!saveSettings(s)) {
+        exit(EXIT_FAILURE);
+    }
 }
 
-void loadSettings(settings *s) {
+bool loadSettings(settings *s) {
     FILE *settFp;
     char *line = NULL;
     char *value;
     size_t len = 0;
 
-    int readError = false;
+    bool result = true;
+    bool readError = false;
 
-    if (settFp = fopen(ABS_P  CONFIG_DIR  SETTINGS_F, "r")) {
+    if (settFp = fopen(HOME CONFIG_DIR SETTINGS_F, "r")) {
         /* discard first line */
         if (getline(&line, &len, settFp) == -1) {
             readError = true;
@@ -111,23 +124,25 @@ void loadSettings(settings *s) {
             printf("Reading error");
             exit(EXIT_FAILURE);
         }
-        printf("Setting loaded\n");
+        printf("Settings loaded\n");
     } else {
         perror("Loading setting from file");
-        exit(EXIT_FAILURE);
+        result = false;
     }
+    return result;
 }
 
-void saveSettings(settings *s) {
+bool saveSettings(settings *s) {
     int settFd;
     char num[20];
+    bool result = true;
 
     /* create config folder if non-existant and check for errors */
-    if (mkdir(ABS_P  CONFIG_DIR, 0777) && errno != EEXIST) {
+    if (mkdir(HOME CONFIG_DIR, 0777) && errno != EEXIST) {
         printf("Error while trying to create %s folder\n", CONFIG_DIR);
     }
     /* create config file in non-existant and save data from a settings struct */
-    if (settFd = open(ABS_P  CONFIG_DIR SETTINGS_F, O_WRONLY | O_TRUNC | O_CREAT, 0777)) {
+    if (settFd = open(HOME CONFIG_DIR SETTINGS_F, O_WRONLY | O_TRUNC | O_CREAT, 0777)) {
         write(settFd, "---- USER SETTINGS --------------------------\n", 46);
 
         write(settFd, "LOG_NAME#\t", strlen("LOG_NAME#\t"));
@@ -155,8 +170,9 @@ void saveSettings(settings *s) {
         printf("Settings successfully saved\n");
     } else {
         perror("Saving settings");
-        exit(EXIT_FAILURE);
+        result = false;
     }
+    return result;
 }
 
 /* must return true */
@@ -203,8 +219,9 @@ bool readArguments(int argc, char **argv, settings *s, bool *updateSettings) {
 bool evaluateCommand(settings *s, char *arg, char *val) {
     bool result = false;
 
-    if ((!strcmp(arg, "--logfile")) || (!strcmp(arg, "-l"))) {
+    if ((!strcmp(arg, "--logfile")) || (!strcmp(arg, "-log"))) {
         strcpy(s->logF, val);
+        result = true;
     } else if ((!strcmp(arg, "--maxCmd")) || (!strcmp(arg, "-mc"))) {
         if (!strncmp(val, "-", 1)) {
             printf("Command '%s': invalid negative number\n", arg);
@@ -243,6 +260,15 @@ bool evaluateCommand(settings *s, char *arg, char *val) {
             printf("Argument:%s - Invalid input:%s\n", arg, val);
             result = false;
         }
+    } else if ((!strcmp(arg, "--default")) || (!strcmp(arg, "-d"))) {
+        result = true;
+        if (!strcmp(val, "true")) {
+            resetSettings(s);
+        } else if (!strcmp(val, "false")) {
+        } else {
+            printf("Argument:%s - Invalid input:%s\n", arg, val);
+            result = false;
+        }
     } else {
         printf("Invalid argument found:'%s=%s'\n", arg, val);
     }
@@ -259,11 +285,12 @@ void showSettings(settings *s) {
 }
 
 void printInfo(settings *s) {
-    printf("---- STATISTICHE COMANDI E ANALISI ----------------------------------------------------------------------\n\n");
+    printf("\n---- STATISTICHE COMANDI E ANALISI ----------------------------------------------------------------------\n\n");
     if (s->printInfo) {
         printf("List of compatible arguments:\n");
         printf("-log\t| --logfile\t:\t<str>\tlog file name (NOT USABLE NOW)\n");
         printf("-h\t| --help\t:\t<bool>\tset true in order to display arguments list\n");
+        printf("-d\t| --default\t:\t<bool>\tsettings factory reset\n");
         printf("-c\t| --code\t:\t<bool>\tprints command/subcommand return code on log file\n");
         printf("-mc\t| --maxCmd\t:\t<int>\tmaximum input command length\n");
         printf("-mo\t| --maxOutput\t:\t<int>\tmaximum length for command/subcommand output result on log file\n");

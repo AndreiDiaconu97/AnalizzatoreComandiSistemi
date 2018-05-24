@@ -1,11 +1,11 @@
 #include "myLibrary.h"
+#include <errno.h>
 #include <fcntl.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <errno.h>
 
 enum received_data {
     TYPE,
@@ -35,22 +35,21 @@ void usr1_handler(int sig);
 void logger(settings *s) {
     /* logger is closed with a custom signal */
     signal(SIGUSR1, usr1_handler);
-
     char buffer[2 * s->maxCmd + PK_T + PK_O + PK_R]; /* must contain data received for a single comand */
     char *inputs[s->packFields];                     /* used to reference different parts of the buffer */
     char size[65];                                   /* not too big, must contain a string representing just an integer */
     int count = 0;
 
     /* open FIFO in read/write mode so it block when no data is received */
-    int myFifo = open(ABS_P  TEMP_DIR  LOGGER_FIFO_F, O_RDWR, 0777);
+    int myFifo = open(HOME TEMP_DIR LOGGER_FIFO_F, O_RDWR, 0777);
 
     /* create log folder if non-existant and check for errors */
-    if (mkdir(ABS_P  LOG_DIR, 0777) && errno != EEXIST) {
+    if (mkdir(HOME LOG_DIR, 0777) && errno != EEXIST) {
         printf("Error while trying to create %s folder\n", CONFIG_DIR);
     }
     /* open/create log file and move pipe to stdout */
     char logFile[PATH_S];
-    strcpy(logFile, ABS_P  LOG_DIR);
+    strcpy(logFile, HOME LOG_DIR);
     strcat(logFile, s->logF);
 
     int myLog = open(logFile, O_WRONLY | O_APPEND | O_CREAT, 0777);
@@ -84,8 +83,9 @@ void logger(settings *s) {
 }
 
 void usr1_handler(int sig) {
-    remove(ABS_P  TEMP_DIR  LOG_PID_F);
-    remove(ABS_P  TEMP_DIR  LOGGER_FIFO_F);
+    //close()
+    remove(HOME TEMP_DIR LOG_PID_F);
+    remove(HOME TEMP_DIR LOGGER_FIFO_F);
     exit(EXIT_SUCCESS);
 }
 
