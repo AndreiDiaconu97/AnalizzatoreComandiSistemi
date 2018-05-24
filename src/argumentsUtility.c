@@ -13,7 +13,7 @@
 
 void initSettings(settings *s) {
     strcpy(s->cmd, "");
-    s->packFields = 5;
+    s->packFields = 8;
     s->printInfo = false;
 
     /* check for existing user configuration */
@@ -291,7 +291,7 @@ void printInfo(settings *s) {
         printf("List of compatible arguments:\n");
         printf("-log\t| --logfile\t:\t<str>\tlog file name (NOT USABLE NOW)\n");
         printf("-h\t| --help\t:\t<bool>\tset true in order to display arguments list\n");
-        printf("-d\t| --default\t:\t<bool>\tsettings factory reset\n");
+        printf("-d\t| --default\t:\t<bool>\tfactory reset\n");
         printf("-c\t| --code\t:\t<bool>\tprints command/subcommand return code on log file\n");
         printf("-mc\t| --maxCmd\t:\t<int>\tmaximum input command length\n");
         printf("-mo\t| --maxOutput\t:\t<int>\tmaximum length for command/subcommand output result on log file\n");

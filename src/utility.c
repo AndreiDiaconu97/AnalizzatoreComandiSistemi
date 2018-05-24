@@ -21,11 +21,13 @@ void segmentcpy(char *dst, char *src, int from, int to) {
 
 void sendData(Pk *data, settings *s) {
     /* elements lengths */
+    int beginDateSize = strlen(data->beginDate) + 1;
+    int completionDateSize = strlen(data->completionDate) + 1;
+    int durationSize = strlen(data->duration) + 1;
     int outTypeSize = strlen(data->outType) + 1;
     int origCmdSize = strlen(data->origCmd) + 1;
     int cmdSize = strlen(data->cmd) + 1;
     int returnSize = strlen(data->returnC) + 1;
-
     /* limit output printed on log */
     int outSize;
     if (s->maxOut < strlen(data->out) + 1) {
@@ -33,7 +35,16 @@ void sendData(Pk *data, settings *s) {
     } else {
         outSize = strlen(data->out) + 1;
     }
-    int dataSize = outTypeSize + origCmdSize + cmdSize + outSize + returnSize;
+
+    int dataSize = 0;
+    dataSize += beginDateSize;
+    dataSize += completionDateSize;
+    dataSize += durationSize;
+    dataSize += outTypeSize;
+    dataSize += origCmdSize;
+    dataSize += cmdSize;
+    dataSize += outSize;
+    dataSize += returnSize;
 
     char dataLen[65];
     sprintf(dataLen, "%d", dataSize);
@@ -43,6 +54,13 @@ void sendData(Pk *data, settings *s) {
     char superstring[dataSize + strlen(dataLen) + 1];
     strcpy(&superstring[i], dataLen);
     i += strlen(dataLen) + 1;
+
+    strcpy(&superstring[i], data->beginDate);
+    i += beginDateSize;
+    strcpy(&superstring[i], data->completionDate);
+    i += completionDateSize;
+    strcpy(&superstring[i], data->duration);
+    i += durationSize;
     strcpy(&superstring[i], data->outType);
     i += outTypeSize;
     strcpy(&superstring[i], data->origCmd);
@@ -57,6 +75,7 @@ void sendData(Pk *data, settings *s) {
     /* send superstring */
     int loggerFd;
     if ((loggerFd = open(HOME TEMP_DIR LOGGER_FIFO_F, O_WRONLY)) == -1) {
+        /* probably logger was killed by someone, manage the case and start new one? */
         perror("Opening logger fifo");
         exit(EXIT_FAILURE);
     }
@@ -65,11 +84,14 @@ void sendData(Pk *data, settings *s) {
 }
 
 void executeCommand(int toShell, int fromShell, Pk *data, bool piping, bool *proceed) {
+    clock_t t;
     int count;
     char tmp[32];
     sprintf(tmp, "; echo $?; kill -10 %d\n", getpid());
 
     /* write and wait for shell response */
+    data->beginDate = getcTime();
+    t = clock();
     if (piping) {
         if (data->noOut) {
             write(toShell, "false|", strlen("false|"));
@@ -89,6 +111,10 @@ void executeCommand(int toShell, int fromShell, Pk *data, bool piping, bool *pro
             break;
         }
     }
+    t = clock() - t;
+    double elapsed = ((double)t) / CLOCKS_PER_SEC;
+    data->completionDate = getcTime();
+    snprintf(data->duration, 19, "%f", elapsed);
 
     /* read from pipe */
     count = read(fromShell, data->out, PK_O);

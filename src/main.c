@@ -8,7 +8,7 @@
 #include <sys/stat.h>
 //#include <sys/types.h>
 #include <sys/wait.h>
-//#include <time.h>
+#include <time.h>
 #include <unistd.h>
 
 /* handler for SIGUSR1 signal used for father-shell communication */
@@ -47,13 +47,17 @@ int main(int argc, char *argv[]) {
     /* search for existing logger before any forking */
     pidFD = open(HOME TEMP_DIR LOG_PID_F, O_RDONLY, 0777);
     if (pidFD == -1) {
+        /* logger process id file not found */
         needNew = true;
     } else {
+        /* existing file found, now read */
         int pIDSize = read(pidFD, logIDbuffer, sizeof logIDbuffer);
         loggerID = atoi(logIDbuffer);
         if (getpgid(loggerID) < 0) {
+            /* logger non existent */
             needNew = true;
         } else {
+            /* check fifo accessibility */
             int fifoFD = open(HOME TEMP_DIR LOGGER_FIFO_F, O_RDWR, 0777);
             if (fifoFD == -1) {
                 needNew = true;
@@ -65,7 +69,7 @@ int main(int argc, char *argv[]) {
     close(pidFD);
 
     /** Update settings file and logger if found user arguments.
-     * (deas not check for differences in settings file, always replace)
+    * (does not check for differences in settings file, always replace)
     **/
     if (updateSettings) {
         saveSettings(&sett);
@@ -96,8 +100,8 @@ int main(int argc, char *argv[]) {
     }
 
     if (!needNew) {
+        /* check for log file existence (should check every time a subcommand is sent?)*/
         if (open(HOME LOG_DIR LOG_F, O_RDONLY, 0777) == -1) {
-            // log file not found, restart logger
             printf("Log file not found, creating new one\n");
             killLogger(loggerID);
             needNew = true;
@@ -109,7 +113,7 @@ int main(int argc, char *argv[]) {
         printf("Initialising new logger process\n\n");
 
         /* reset fifo file */
-        remove(HOME TEMP_DIR LOGGER_FIFO_F);
+        //remove(HOME TEMP_DIR LOGGER_FIFO_F); /* may cause data loss */
         mkfifo(HOME TEMP_DIR LOGGER_FIFO_F, 0777);
 
         /* fork for logger */

@@ -13,12 +13,12 @@ typedef int bool;
  * HOME XXX_DIR XXX_F
  * -
  * where:
- *  HOME is the absolute path of the project's main directory
- *  XXX_DIR is a directory name
- *  XXX_F is a file name
+ *  HOME is the path (absolute or relative) of the project's main directory
+ *  XXX_DIR is a project directory name
+ *  XXX_F is a project file name
  **/
 
-/* leave "." for relative path or assign an absolute path (through complier) */
+/* leave "." for relative path or assign an absolute path */
 #ifndef HOME
 #define HOME "."
 #endif
@@ -72,6 +72,9 @@ typedef struct Pack {
     /* manages commands for which shell returns no output */
     bool noOut;
 
+    char *beginDate;      /* should be less than PK_T */
+    char *completionDate; /* should be less than PK_T */
+    char duration[PK_T];
     char origCmd[CMD_S];
     char outType[PK_T];
     char cmd[CMD_S];
@@ -92,7 +95,7 @@ typedef struct Settings {
     int maxCmd;
     int maxOut;
 
-    /* data hidden from user */
+    /* intended to be used only by logger, user should not touch */
     int packFields;
 } settings;
 

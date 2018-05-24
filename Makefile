@@ -2,23 +2,33 @@
 
 ### MACRO ###
 ABS_P := $(shell pwd)# project absolute path
-SRC_DIR := src
-BIN_DIR := bin
-TMP_DIR := temp
 EXEC := run# executable name
-
-## program exclusive ##
-CFG_DIR := config
-LOG_DIR := logs
 
 ## compiling phase ##
 CC := gcc
-#MACRO have to be converted in string format, thus encapsulation with \" is used
 CFLAGS = -std=gnu90
 CFLAGS += -D ABS_P="\"$(ABS_P)\""
+
+# program folders #
+SRC_DIR := src
+BIN_DIR := bin
+TMP_DIR := temp
+CFG_DIR := config
+LOG_DIR := logs
 CFLAGS += -D TEMP_DIR="\"/$(TMP_DIR)/\""
 CFLAGS += -D CFG_DIR="\"/$(CFG_DIR)/\""
 CFLAGS += -D LOG_DIR="\"/$(LOG_DIR)/\""
+
+# program files #
+LOG_F = log.txt
+LOG_PID_F = loggerPid.txt
+LOGGER_FIFO_F = loggerFifo
+SETTINGS_F = user_settings.txt
+CFLAGS += -D  LOG_F=\"$(LOG_F)\"
+CFLAGS += -D  LOG_PID_F=\"$(LOG_PID_F)\"
+CFLAGS += -D  LOGGER_FIFO_F=\"$(LOGGER_FIFO_F)\"
+CFLAGS += -D  SETTINGS_F=\"$(SETTINGS_F)\"
+
 
 ## managed files ##
 srcs := $(wildcard $(SRC_DIR)/*.c)# source files
@@ -45,7 +55,7 @@ help h:
 	@ echo "help\t| h :\tLists usable commands"
 	@ echo "build\t| b :\tSets up project structure, files and executable"
 	@ echo "clean\t| c :\tCancels every file and folder created with [build | b] command"
-	@ echo "\n"
+	@ echo ""
 	@ echo "-----------------------------------------------------------------------------------------------"
 	@ echo "CUSTOMIZABLE MACRO LIST"
 	@ echo "COMMAND\t<value>\t: description" 
@@ -53,6 +63,13 @@ help h:
 	@ echo "EXEC\t: executable file name"
 	@ echo "CC\t: compiler"
 	@ echo ""
+	@ echo "File list:"
+	@ echo "LOG_F\t\t: log filename"	
+	@ echo "LOG_PID_F\t: file containing process ID of running logger"	
+	@ echo "LOGGER_FIFO_F\t: fifo used for fathers-logger data sending"	
+	@ echo "SETTINGS_F\t: user settings filename"	
+	@ echo ""
+	@ echo "Path/Directory list:"
 	@ echo "ABS_P\t: absolute path of the project"
 	@ echo "SRC_DIR\t: source folder name"
 	@ echo "BIN_DIR\t: name of folder containing executables"
@@ -98,7 +115,7 @@ $(TMP_DIR)/%.o : $(SRC_DIR)/%.c $(deps)
 
 
 ##################
-### CLEAN INFO ###
+#### rm INFO #####
 ################################################################################################################################ \
 rm -rf /path/to/directory \
 	To remove the folder with all its contents(including all interior folders): \

@@ -5,28 +5,39 @@ AnalizzatoreComandiSistemi:
 
 Here a TO-DO list for every file
   logger.c:
-    ☐ implement log formatting ("txt" and "csv")
-    ☐ re-create log file if deleted?
-    ☐ @critical implement statistical info (start time, end time, duration, input length, out length
-    ☐ @critical implement kill after emptying fifo (safe close)
+    ☐ @high implement log formatting ("txt" and "csv")
+    ☐ implement statistical info (input length)
+    ☐ @critical implement kill after emptying fifo? (safe close)
+    ☐ check if command output is successfully truncated
   main.c:
     settings:
       ☐ @critical improve user customization for MACROed variables
       ☐ @low improve settings with useful properties
-      ☐ maybe can compress code regarding settings (especially loadSettings())
-      ✔ automatically restart logger if settings changed @done(18-05-24 21:31)
+      ☐ maybe can compress code regarding settings
+      ☐ check buffer overflows (es.: if command buffer can't contain user unput)
     logger setup:
       ✔ ok @done(18-05-21 16:01)
     shell setup:
       ✔ ok @done(18-05-21 18:04)
     main program:
-      ☐ support special symbols for subcommand detection (&&, (), ||)
+      ☐ @low support special symbols for subcommand detection (&&, (), ||)
   myLibrary.h:
-    ✔ ok @done(18-05-10 16:18)
+    ☐ find if #ifndef..#define..#endif is needed with header name
   utility.c:
     ✔ ok @done(18-05-21 16:01)
   Makefile:
     ✔ ok @done(18-05-23 23:35)
+
+Program testing guidelines:
+  ☐ play with program arguments
+  ☐ play with Makefile arguments
+  ☐ search for buffer overflow
+  ☐ play with articulated shell commands
+  ☐ check log and output integrity
+  ☐ spam programs for concurrency testing
+  ☐ try running program from different directory
+
+
 Archive:
   Completed todos will be moved here
   ✔ @high check buffers when using all of them or more @done(18-05-12 19:01)
@@ -54,3 +65,6 @@ Archive:
   ✔ support '(' and ')' in commands @done(18-05-23 23:30)
   ✘ try to hide some commands from tab-suggestions @cancelled(18-05-23 23:34) no way?
   ✔ @high Implement user-defined MACRO for compilation @done(18-05-23 23:35)
+  ✔ re-create log file if deleted? @done(18-05-24 22:17)
+  ✔ automatically restart logger if settings changed @done(18-05-24 21:31)
+  
