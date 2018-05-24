@@ -18,6 +18,8 @@ void unpauser(int sig) {
 }
 
 int main(int argc, char *argv[]) {
+    printf("---- STATISTICHE COMANDI E ANALISI ----------------------------------------------------------------------\n\n");
+
     /* user-settings container */
     settings sett;
     initSettings(&sett);

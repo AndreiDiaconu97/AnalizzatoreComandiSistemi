@@ -286,7 +286,7 @@ void showSettings(settings *s) {
 }
 
 void printInfo(settings *s) {
-    printf("\n---- STATISTICHE COMANDI E ANALISI ----------------------------------------------------------------------\n\n");
+    printf("---------------------------------------------------------------------------------------------------------\n");
     if (s->printInfo) {
         printf("List of compatible arguments:\n");
         printf("-log\t| --logfile\t:\t<str>\tlog file name (NOT USABLE NOW)\n");
