@@ -41,7 +41,11 @@ void logger(settings *s) {
     int count = 0;
 
     /* open FIFO in read/write mode so it block when no data is received */
-    int myFifo = open(HOME TEMP_DIR LOGGER_FIFO_F, O_RDWR, 0777);
+    int myFifo;
+    if ((myFifo = open(HOME TEMP_DIR LOGGER_FIFO_F, O_RDWR, 0777)) == -1) {
+        perror("Logger: opening fifo");
+        exit(EXIT_FAILURE);
+    }
 
     /* create log folder if non-existant and check for errors */
     if (mkdir(HOME LOG_DIR, 0777) && errno != EEXIST) {
@@ -52,7 +56,11 @@ void logger(settings *s) {
     strcpy(logFile, HOME LOG_DIR);
     strcat(logFile, s->logF);
 
-    int myLog = open(logFile, O_WRONLY | O_APPEND | O_CREAT, 0777);
+    int myLog;
+    if ((myLog = open(logFile, O_WRONLY | O_APPEND | O_CREAT, 0777)) == -1) {
+        perror("Opening log file");
+        exit(EXIT_FAILURE);
+    }
     dup2(myLog, STDOUT_FILENO);
     close(myLog);
 

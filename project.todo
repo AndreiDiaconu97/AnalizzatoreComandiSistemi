@@ -13,8 +13,8 @@ Here a TO-DO list for every file
     settings:
       ☐ @critical improve user customization for MACROed variables
       ☐ @low improve settings with useful properties
-      ☐ maybe can compress code about settings (especially loadSettings())
-      ☐ @critical automatically restart logger if settings changed
+      ☐ maybe can compress code regarding settings (especially loadSettings())
+      ✔ automatically restart logger if settings changed @done(18-05-24 21:31)
     logger setup:
       ✔ ok @done(18-05-21 16:01)
     shell setup:

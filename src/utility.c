@@ -55,7 +55,11 @@ void sendData(Pk *data, settings *s) {
     i += returnSize;
 
     /* send superstring */
-    int loggerFd = open(HOME TEMP_DIR LOGGER_FIFO_F, O_WRONLY);
+    int loggerFd;
+    if ((loggerFd = open(HOME TEMP_DIR LOGGER_FIFO_F, O_WRONLY)) == -1) {
+        perror("Opening logger fifo");
+        exit(EXIT_FAILURE);
+    }
     write(loggerFd, superstring, dataSize + strlen(dataLen) + 1);
     close(loggerFd);
 }
@@ -123,7 +127,7 @@ void executeCommand(int toShell, int fromShell, Pk *data, bool piping, bool *pro
 void killLogger(int loggerID) {
     kill(loggerID, SIGUSR1);
     waitpid(loggerID, NULL, 0);
-    printf("Logger killed\n");
+    printf("logger killed\n");
 }
 
 char *getcTime() {

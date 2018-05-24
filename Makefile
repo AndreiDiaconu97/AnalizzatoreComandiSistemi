@@ -82,7 +82,8 @@ build b: $(BIN_DIR)/$(EXEC)
 $(BIN_DIR)/$(EXEC) : $(BIN_DIR) $(TMP_DIR) $(objs)
 	@ echo "\nLinking *.o files..."
 	@ $(CC) -o $@ $(objs)
-	@ echo "Executable is ready, path:'$(ABS_P)'"
+	@ echo "\nExecutable created in the following path:"
+	@ echo "$(ABS_P)/$(BIN_DIR)/$(EXEC)"
 
 # creating folders
 $(BIN_DIR) $(TMP_DIR):

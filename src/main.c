@@ -30,12 +30,6 @@ int main(int argc, char *argv[]) {
     }
     printInfo(&sett);
 
-    /* close program if command is empty */
-    if (strcmp(sett.cmd, "") == 0) {
-        printf("No command found, closing...\n");
-        exit(EXIT_FAILURE);
-    }
-
     /* processes IDs */
     int fatherID = getpid();
     int loggerID;
@@ -78,19 +72,34 @@ int main(int argc, char *argv[]) {
             /* restart logger */
             killLogger(loggerID);
             needNew = true;
-            printf("Logger restarted\n");
+            printf("logger restarted\n");
         }
         printf("\n");
+    }
+
+    /* close program if command is empty */
+    if (strcmp(sett.cmd, "") == 0) {
+        printf("No command found, closing...\n");
+        exit(EXIT_FAILURE);
     }
 
     /* 'kill' special command check (kills logger) */
     if (!strcmp(sett.cmd, "kill")) {
         if (needNew) {
-            printf("No logger\n");
+            printf("no logger\n");
         } else {
             killLogger(loggerID);
         }
         exit(EXIT_SUCCESS);
+    }
+
+    if (!needNew) {
+        if (open(HOME LOG_DIR LOG_F, O_RDONLY, 0777) == -1) {
+            // log file not found, restart logger
+            printf("Log file not found, creating new one\n");
+            killLogger(loggerID);
+            needNew = true;
+        }
     }
 
     /* fork for logger if no existing one is found */

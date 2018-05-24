@@ -18,8 +18,7 @@ void initSettings(settings *s) {
 
     /* check for existing user configuration */
     if (!loadSettings(s)) {
-        printf("creating new file...\n");
-
+        printf("restoring file...\n");
         resetSettings(s);
     }
 }
@@ -35,6 +34,8 @@ void resetSettings(settings *s) {
     /* save default settings */
     if (!saveSettings(s)) {
         exit(EXIT_FAILURE);
+    } else {
+        printf("Restored default settings\n");
     }
 }
 
@@ -121,12 +122,12 @@ bool loadSettings(settings *s) {
             free(line);
         }
         if (readError) {
-            printf("Reading error");
-            exit(EXIT_FAILURE);
+            printf("loading settings: reading error\n");
+            result = false;
         }
-        printf("Settings loaded\n");
+        printf("settings loaded\n");
     } else {
-        perror("Loading setting from file");
+        perror("loading settings from file");
         result = false;
     }
     return result;
@@ -142,7 +143,7 @@ bool saveSettings(settings *s) {
         printf("Error while trying to create %s folder\n", CONFIG_DIR);
     }
     /* create config file in non-existant and save data from a settings struct */
-    if (settFd = open(HOME CONFIG_DIR SETTINGS_F, O_WRONLY | O_TRUNC | O_CREAT, 0777)) {
+    if ((settFd = open(HOME CONFIG_DIR SETTINGS_F, O_WRONLY | O_TRUNC | O_CREAT, 0777)) != -1) {
         write(settFd, "---- USER SETTINGS --------------------------\n", 46);
 
         write(settFd, "LOG_NAME#\t", strlen("LOG_NAME#\t"));
@@ -167,9 +168,9 @@ bool saveSettings(settings *s) {
         write(settFd, "\n", strlen("\n"));
 
         close(settFd);
-        printf("Settings successfully saved\n");
+        printf("settings saved\n");
     } else {
-        perror("Saving settings");
+        perror("saving settings");
         result = false;
     }
     return result;
