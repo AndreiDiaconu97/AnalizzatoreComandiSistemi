@@ -48,7 +48,7 @@ void sendData(Pk *data) {
     i += returnSize;
 
     /* send superstring */
-    int loggerFd = open(ABS_P TEMP_DIR LOGGER_FIFO_F, O_WRONLY);
+    int loggerFd = open(ABS_P  TEMP_DIR  LOGGER_FIFO_F, O_WRONLY);
     write(loggerFd, superstring, dataSize + strlen(dataLen) + 1);
     close(loggerFd);
 }

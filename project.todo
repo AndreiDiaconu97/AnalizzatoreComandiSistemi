@@ -17,7 +17,7 @@ Here a TO-DO list for every file
     shell setup:
       ✔ ok @done(18-05-21 18:04)
     main program:
-      ☐ support special symbols for subcommand detection (&&, ||, <, >, |, ;)
+      ☐ support special symbols for subcommand detection (&&, (), ||)
   myLibrary.h:
     ✔ ok @done(18-05-10 16:18)
   utility.c:

@@ -55,7 +55,7 @@ int main(int argc, char *argv[]) {
     char logIDbuffer[PID_S];
 
     /* search for existing logger before any forking */
-    pidFD = open(ABS_P TEMP_DIR LOG_PID_F, O_RDONLY, 0777);
+    pidFD = open(ABS_P  TEMP_DIR  LOG_PID_F, O_RDONLY, 0777);
     if (pidFD == -1) {
         needNew = true;
     } else {
@@ -64,7 +64,7 @@ int main(int argc, char *argv[]) {
         if (getpgid(loggerID) < 0) {
             needNew = true;
         } else {
-            int fifoFD = open(ABS_P TEMP_DIR LOGGER_FIFO_F, O_RDWR, 0777);
+            int fifoFD = open(ABS_P  TEMP_DIR  LOGGER_FIFO_F, O_RDWR, 0777);
             if (fifoFD == -1) {
                 needNew = true;
                 kill(loggerID, SIGKILL);
@@ -89,7 +89,7 @@ int main(int argc, char *argv[]) {
         if (needNew) {
             printf("No logger\n");
         } else {
-            int loggerFd = open(ABS_P TEMP_DIR LOGGER_FIFO_F, O_WRONLY);
+            int loggerFd = open(ABS_P  TEMP_DIR  LOGGER_FIFO_F, O_WRONLY);
             kill(loggerID, SIGUSR1);
             waitpid(loggerID, NULL, 0);
             close(loggerFd);
@@ -103,8 +103,8 @@ int main(int argc, char *argv[]) {
         printf("Initialising new logger process\n\n");
 
         /* reset fifo file */
-        remove(ABS_P TEMP_DIR LOGGER_FIFO_F);
-        mkfifo(ABS_P TEMP_DIR LOGGER_FIFO_F, 0777);
+        remove(ABS_P  TEMP_DIR  LOGGER_FIFO_F);
+        mkfifo(ABS_P  TEMP_DIR  LOGGER_FIFO_F, 0777);
 
         /* fork for logger */
         if ((loggerID = fork()) < 0) {
@@ -122,7 +122,7 @@ int main(int argc, char *argv[]) {
         } else { //father
             /* saving childID on file */
             sprintf(logIDbuffer, "%d", loggerID);
-            pidFD = open(ABS_P TEMP_DIR LOG_PID_F, O_WRONLY | O_TRUNC | O_CREAT, 0777);
+            pidFD = open(ABS_P  TEMP_DIR  LOG_PID_F, O_WRONLY | O_TRUNC | O_CREAT, 0777);
             if (write(pidFD, logIDbuffer, strlen(logIDbuffer) + 1) == -1) {
                 perror("Saving result");
                 exit(EXIT_FAILURE);

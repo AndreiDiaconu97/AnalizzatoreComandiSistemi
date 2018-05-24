@@ -24,9 +24,17 @@ typedef int bool;
 #endif
 
 /* default directories */
+#ifndef LOG_DIR
 #define LOG_DIR "/logs/"
-#define TEMP_DIR "/temp/"
+#endif
+
+#ifndef CONFIG_DIR
 #define CONFIG_DIR "/config/"
+#endif
+
+#ifndef TEMP_DIR
+#define TEMP_DIR "/temp/"
+#endif
 
 /* default file names */
 #ifndef LOG_F

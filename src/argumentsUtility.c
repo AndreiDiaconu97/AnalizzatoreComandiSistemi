@@ -34,7 +34,7 @@ void loadSettings(settings *s) {
 
     int readError = false;
 
-    if (settFp = fopen(ABS_P CONFIG_DIR SETTINGS_F, "r")) {
+    if (settFp = fopen(ABS_P  CONFIG_DIR  SETTINGS_F, "r")) {
         /* discard first line */
         if (getline(&line, &len, settFp) == -1) {
             readError = true;
@@ -123,11 +123,11 @@ void saveSettings(settings *s) {
     char num[20];
 
     /* create config folder if non-existant and check for errors */
-    if (mkdir(ABS_P CONFIG_DIR, 0777) && errno != EEXIST) {
+    if (mkdir(ABS_P  CONFIG_DIR, 0777) && errno != EEXIST) {
         printf("Error while trying to create %s folder\n", CONFIG_DIR);
     }
     /* create config file in non-existant and save data from a settings struct */
-    if (settFd = open(ABS_P CONFIG_DIR SETTINGS_F, O_WRONLY | O_TRUNC | O_CREAT, 0777)) {
+    if (settFd = open(ABS_P  CONFIG_DIR SETTINGS_F, O_WRONLY | O_TRUNC | O_CREAT, 0777)) {
         write(settFd, "---- USER SETTINGS --------------------------\n", 46);
 
         write(settFd, "LOG_NAME#\t", strlen("LOG_NAME#\t"));
