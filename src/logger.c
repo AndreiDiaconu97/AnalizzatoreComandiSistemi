@@ -115,7 +115,7 @@ void usr1_handler(int sig) {
 void printTxt(char **inputs, settings *s) {
     printf("ID:\t\t%s\n", "1.1.1");
     printf("STARTED:\t%s\n", inputs[START]);
-    printf("ENDED:\t\t%s\n", inputs[END]);
+    printf("ENDED:\t%s\n", inputs[END]);
     printf("DURATION:\t%ss\n", inputs[DURATION]);
     printf("TYPE:\t\t%s\n", inputs[TYPE]);
     printf("COMMAND:\t%s\n", inputs[CMD]);
