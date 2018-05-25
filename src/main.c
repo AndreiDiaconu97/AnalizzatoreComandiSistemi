@@ -44,32 +44,22 @@ int main(int argc, char *argv[]) {
     bool needNew = false;
     char logIDbuffer[PID_S];
 
-    printf("CHECK loggerpID.txt\n");
     /* search for existing logger before any forking */
-    /*
-    while (pidFD = open(HOME TEMP_DIR LOG_PID_F, O_RDONLY, 0777) == -1) {
-        printf("CANNOT OPEN LOGGER\n");
-    }
-    */
     pidFD = open(HOME TEMP_DIR LOG_PID_F, O_RDONLY, 0777);
     if (pidFD == -1) {
-        printf("LOGGER PID not found!\n");
         /* logger process id file not found */
         needNew = true;
     } else {
-        printf("LOGGER PID found\n");
         /* existing file found, now read */
         int pIDSize = read(pidFD, logIDbuffer, sizeof logIDbuffer);
         loggerID = atoi(logIDbuffer);
         if (getpgid(loggerID) < 0) {
-            printf("Logger PROCESS not found\n");
             /* logger non existent */
             needNew = true;
         } else {
             /* check fifo accessibility */
             int fifoFD = open(HOME TEMP_DIR LOGGER_FIFO_F, O_RDWR, 0777);
             if (fifoFD == -1) {
-                printf("FIFO NOT found\n");
                 needNew = true;
                 kill(loggerID, SIGKILL);
             }
@@ -79,9 +69,7 @@ int main(int argc, char *argv[]) {
     }
     close(pidFD);
 
-    /** Update settings file and logger if found user arguments.
-    * (does not check for differences in settings file, always replace)
-    **/
+    /* uèdate settings file and logger if needed */
     if (updateSettings) {
         saveSettings(&sett);
         if (!needNew) {
@@ -110,7 +98,7 @@ int main(int argc, char *argv[]) {
     }
 
     if (!needNew) {
-        /* check for log file existence (should check every time a subcommand is sent?)*/
+        /* check for log file existence */
         if (open(HOME LOG_DIR LOG_F, O_RDONLY, 0777) == -1) {
             printf("Log file not found, creating new one\n");
             killLogger(loggerID);
@@ -123,7 +111,7 @@ int main(int argc, char *argv[]) {
         printf("Started new logger process\n\n");
 
         /* reset fifo file */
-        //remove(HOME TEMP_DIR LOGGER_FIFO_F); /* may cause data loss */
+        //remove(HOME TEMP_DIR LOGGER_FIFO_F); /* use if prefer a new clean fifo (existant data is LOST!) */
         mkfifo(HOME TEMP_DIR LOGGER_FIFO_F, 0777);
 
         /* fork for logger */
@@ -187,6 +175,7 @@ int main(int argc, char *argv[]) {
     /******************************************************************************/
     /********************************* MAIN PROGRAM *******************************/
     /******************************************************************************/
+    showSettings(&sett);
     printf("Father ID: %d\n", fatherID);
     printf("Logger ID: %d\n", loggerID);
     printf("Shell  ID: %d\n", shellID);

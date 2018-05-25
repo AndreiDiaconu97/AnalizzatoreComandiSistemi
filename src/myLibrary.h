@@ -82,7 +82,8 @@ typedef struct Pack {
     char returnC[PK_R];
 } Pk;
 
-/** user settings container:
+/** 
+ * user settings container:
  * everything in this struct can be customised by user using supported arguments
  **/
 typedef struct Settings {
@@ -91,8 +92,6 @@ typedef struct Settings {
 
     bool printInfo;
     bool code;
-
-    int maxCmd;
     int maxOut;
 
     /* intended to be used only by logger, user should not touch */

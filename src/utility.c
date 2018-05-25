@@ -1,10 +1,10 @@
 #include "myLibrary.h"
+#include <errno.h>
 #include <fcntl.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <errno.h>
 //#include <sys/stat.h>
 //#include <sys/types.h>
 //#include <sys/wait.h>
@@ -21,14 +21,20 @@ void segmentcpy(char *dst, char *src, int from, int to) {
 }
 
 void sendData(Pk *data, settings *s) {
+    /* check is return code flag is set */
+    if (!s->code) {
+        strcpy(data->returnC, "false");
+    }
+
     /* elements lengths */
     int beginDateSize = strlen(data->beginDate) + 1;
     int completionDateSize = strlen(data->completionDate) + 1;
     int durationSize = strlen(data->duration) + 1;
     int outTypeSize = strlen(data->outType) + 1;
     int origCmdSize = strlen(data->origCmd) + 1;
-    int cmdSize = strlen(data->cmd) + 1;
     int returnSize = strlen(data->returnC) + 1;
+    int cmdSize = strlen(data->cmd) + 1;
+
     /* limit output printed on log */
     int outSize;
     if (s->maxOut < strlen(data->out) + 1) {
@@ -69,6 +75,7 @@ void sendData(Pk *data, settings *s) {
     i += origCmdSize;
     strcpy(&superstring[i], data->cmd);
     i += cmdSize;
+
     /* managing output limit */
     strncpy(&superstring[i], data->out, outSize);
     i += outSize;

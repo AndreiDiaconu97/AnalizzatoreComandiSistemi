@@ -5,10 +5,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-//#include <sys/stat.h>
-//#include <sys/types.h>
-//#include <syslog.h>
-//#include <time.h>
 #include <unistd.h>
 
 void initSettings(settings *s) {
@@ -27,7 +23,6 @@ void resetSettings(settings *s) {
     /* restore default settings */
     strcpy(s->logF, LOG_F);
 
-    s->maxCmd = CMD_S;
     s->maxOut = OUT_S;
     s->code = true;
 
@@ -64,22 +59,6 @@ bool loadSettings(settings *s) {
             }
             value += 2; /* move to value position */
             strncpy(s->logF, value, strlen(value) - 1);
-        }
-
-        /* get max command length */
-        if (getline(&line, &len, settFp) == -1) {
-            readError = true;
-        } else {
-            if ((value = strchr(line, '#')) == NULL) {
-                printf("Corrupted settings file\n");
-                exit(EXIT_FAILURE);
-            }
-            value += 2;                      /* move to value position */
-            value[strlen(value) - 1] = '\0'; /* remove ending '\n' */
-            if ((s->maxCmd = atoi(value)) == 0) {
-                printf("maxCmd: invalid value");
-                exit(EXIT_FAILURE);
-            }
         }
 
         /* get max output length */
@@ -150,10 +129,6 @@ bool saveSettings(settings *s) {
         write(settFd, s->logF, strlen(s->logF));
         write(settFd, "\n", strlen("\n"));
 
-        write(settFd, "MAX_CMD_LENGTH#\t", strlen("MAX_CMD_LENGTH#\t"));
-        sprintf(num, "%d\n", s->maxCmd);
-        write(settFd, num, strlen(num));
-
         write(settFd, "MAX_OUT_LENGTH#\t", strlen("MAX_OUT_LENGTH#\t"));
         sprintf(num, "%d\n", s->maxOut);
         write(settFd, num, strlen(num));
@@ -223,15 +198,6 @@ bool evaluateCommand(settings *s, char *arg, char *val) {
     if ((!strcmp(arg, "--logfile")) || (!strcmp(arg, "-log"))) {
         strcpy(s->logF, val);
         result = true;
-    } else if ((!strcmp(arg, "--maxCmd")) || (!strcmp(arg, "-mc"))) {
-        if (!strncmp(val, "-", 1)) {
-            printf("Command '%s': invalid negative number\n", arg);
-        } else if (atoi(val)) { //checking for integer value
-            s->maxCmd = atoi(val);
-            result = true;
-        } else {
-            printf("Command '%s': couldn't parse value '%s'\n", arg, val);
-        }
     } else if ((!strcmp(arg, "--maxOutput")) || (!strcmp(arg, "-mo"))) {
         if (!strncmp(val, "-", 1)) {
             printf("Command '%s': invalid negative number\n", arg);
@@ -280,8 +246,7 @@ void showSettings(settings *s) {
     printf("--- SETTINGS ---------------------------\n");
     printf("logfile:\t%s\n", s->logF); // strrchr(s->logF, '/')
     printf("return code:\t%s\n", s->code ? "true" : "false");
-    printf("command max length:\t%d\n", s->maxCmd);
-    printf("output max length:\t%d\n", s->maxOut);
+    printf("max out len:\t%d\n", s->maxOut);
     printf("----------------------------------------\n\n");
 }
 
@@ -293,7 +258,6 @@ void printInfo(settings *s) {
         printf("-h\t| --help\t:\t<bool>\tset true in order to display arguments list\n");
         printf("-d\t| --default\t:\t<bool>\tfactory reset\n");
         printf("-c\t| --code\t:\t<bool>\tprints command/subcommand return code on log file\n");
-        printf("-mc\t| --maxCmd\t:\t<int>\tmaximum input command length\n");
         printf("-mo\t| --maxOutput\t:\t<int>\tmaximum length for command/subcommand output result on log file\n");
         printf("\n");
         printf("kill (special argument) :\tcloses logger process if existing\n");
