@@ -76,11 +76,13 @@ void logger(settings *s) {
             read(myFifo, buffer, 1);
 
             /* exit condition */
+            /*
             if (!strncmp(buffer, "!", 1)) {
                 remove(HOME TEMP_DIR LOG_PID_F);
                 remove(HOME TEMP_DIR LOGGER_FIFO_F);
                 exit(EXIT_SUCCESS);
             }
+            */
             strncat(size, buffer, 1);
         } while (*buffer != '\0');
 
@@ -104,7 +106,10 @@ void logger(settings *s) {
  * Logger process is "safely" killed using custom signal SIGUSR1.
  **/
 void usr1_handler(int sig) {
-    write(myFifo, "!", strlen("!"));
+    //write(myFifo, "!", strlen("!"));
+    remove(HOME TEMP_DIR LOG_PID_F);
+    remove(HOME TEMP_DIR LOGGER_FIFO_F);
+    exit(EXIT_SUCCESS);
 }
 
 void printTxt(char **inputs, settings *s) {

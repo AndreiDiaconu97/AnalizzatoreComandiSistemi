@@ -8,10 +8,12 @@ Here a TO-DO list for every file
     ☐ @high implement log formatting ("txt" and "csv")
     ☐ implement statistical info (input length)
     ☐ @critical implement kill after emptying fifo? (safe close)
+    ☐ @critical there can be troubles when restarting logger (problem connected to kill mechanism)
     ☐ check if command output is successfully truncated
+    ☐ settings as --code=<bool> should be gived for every packet and not only once per logger (send flags after packet size? 010010??)
   main.c:
     settings:
-      ☐ @critical improve user customization for MACROed variables
+      ☐ @critical improve user customization for MACROed variables (es.: command size limit)
       ☐ @low improve settings with useful properties
       ☐ maybe can compress code regarding settings
       ☐ check buffer overflows (es.: if command buffer can't contain user unput)

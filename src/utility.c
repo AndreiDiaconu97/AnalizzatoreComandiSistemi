@@ -33,8 +33,9 @@ void sendData(Pk *data, settings *s) {
     if (s->maxOut < strlen(data->out) + 1) {
         outSize = s->maxOut;
     } else {
-        outSize = strlen(data->out) + 1;
+        outSize = strlen(data->out);
     }
+    outSize++; /* for ending '\0' */
 
     int dataSize = 0;
     dataSize += beginDateSize;
@@ -67,8 +68,11 @@ void sendData(Pk *data, settings *s) {
     i += origCmdSize;
     strcpy(&superstring[i], data->cmd);
     i += cmdSize;
-    strcpy(&superstring[i], data->out);
+    /* managing output limit */
+    strncpy(&superstring[i], data->out, outSize);
     i += outSize;
+    strcpy(&superstring[i - 1], "\0");
+
     strcpy(&superstring[i], data->returnC);
     i += returnSize;
 
