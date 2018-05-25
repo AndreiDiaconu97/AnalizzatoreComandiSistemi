@@ -10,13 +10,14 @@ Here a TO-DO list for every file
     ☐ @critical implement kill after emptying fifo? (safe close)
     ☐ @critical there can be troubles when restarting logger (problem connected to kill mechanism)
     ☐ check if command output is successfully truncated
-    ☐ settings as --code=<bool> should be gived for every packet and not only once per logger (send flags after packet size? 010010??)
+    ☐ settings as --code=<bool> should be given for every packet and not only once per logger (send flags after packet size? 010010??)
   main.c:
     settings:
       ☐ @critical improve user customization for MACROed variables (es.: command size limit)
       ☐ @low improve settings with useful properties
       ☐ maybe can compress code regarding settings
       ☐ check buffer overflows (es.: if command buffer can't contain user unput)
+      ☐ @critical fix no logger found on kill with logpID still intact
     logger setup:
       ✔ ok @done(18-05-21 16:01)
     shell setup:

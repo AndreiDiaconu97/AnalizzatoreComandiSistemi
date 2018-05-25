@@ -44,25 +44,36 @@ int main(int argc, char *argv[]) {
     bool needNew = false;
     char logIDbuffer[PID_S];
 
+    printf("CHECK loggerpID.txt\n");
     /* search for existing logger before any forking */
+    /*
+    while (pidFD = open(HOME TEMP_DIR LOG_PID_F, O_RDONLY, 0777) == -1) {
+        printf("CANNOT OPEN LOGGER\n");
+    }
+    */
     pidFD = open(HOME TEMP_DIR LOG_PID_F, O_RDONLY, 0777);
     if (pidFD == -1) {
+        printf("LOGGER PID not found!\n");
         /* logger process id file not found */
         needNew = true;
     } else {
+        printf("LOGGER PID found\n");
         /* existing file found, now read */
         int pIDSize = read(pidFD, logIDbuffer, sizeof logIDbuffer);
         loggerID = atoi(logIDbuffer);
         if (getpgid(loggerID) < 0) {
+            printf("Logger PROCESS not found\n");
             /* logger non existent */
             needNew = true;
         } else {
             /* check fifo accessibility */
             int fifoFD = open(HOME TEMP_DIR LOGGER_FIFO_F, O_RDWR, 0777);
             if (fifoFD == -1) {
+                printf("FIFO NOT found\n");
                 needNew = true;
                 kill(loggerID, SIGKILL);
             }
+            printf("FIFO found\n");
             close(fifoFD);
         }
     }
@@ -78,7 +89,6 @@ int main(int argc, char *argv[]) {
             /* restart logger */
             killLogger(loggerID);
             needNew = true;
-            printf("logger restarted\n");
         }
         printf("\n");
     }
@@ -110,7 +120,7 @@ int main(int argc, char *argv[]) {
 
     /* fork for logger if no existing one is found */
     if (needNew) {
-        printf("Initialising new logger process\n\n");
+        printf("Started new logger process\n\n");
 
         /* reset fifo file */
         //remove(HOME TEMP_DIR LOGGER_FIFO_F); /* may cause data loss */
@@ -166,7 +176,7 @@ int main(int argc, char *argv[]) {
         close(fromShell[0]);
         close(fromShell[1]);
 
-        /* open shell just once per program */
+        /* s shell just once per program */
         char *arguments[] = {"sh", 0};
         execvp(arguments[0], arguments);
 

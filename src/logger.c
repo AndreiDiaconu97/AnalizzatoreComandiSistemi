@@ -74,15 +74,12 @@ void logger(settings *s) {
         size[0] = '\0';
         do {
             read(myFifo, buffer, 1);
-
             /* exit condition */
-            /*
             if (!strncmp(buffer, "!", 1)) {
                 remove(HOME TEMP_DIR LOG_PID_F);
-                remove(HOME TEMP_DIR LOGGER_FIFO_F);
                 exit(EXIT_SUCCESS);
             }
-            */
+
             strncat(size, buffer, 1);
         } while (*buffer != '\0');
 
@@ -97,7 +94,6 @@ void logger(settings *s) {
                 inputs[inTmp++] = &buffer[i + 1];
             }
         }
-
         printTxt(inputs, s);
     }
 }
@@ -106,22 +102,22 @@ void logger(settings *s) {
  * Logger process is "safely" killed using custom signal SIGUSR1.
  **/
 void usr1_handler(int sig) {
-    //write(myFifo, "!", strlen("!"));
-    remove(HOME TEMP_DIR LOG_PID_F);
-    remove(HOME TEMP_DIR LOGGER_FIFO_F);
-    exit(EXIT_SUCCESS);
+    write(myFifo, "!", strlen("!") + 1);
+    //remove(HOME TEMP_DIR LOG_PID_F);
+    //remove(HOME TEMP_DIR LOGGER_FIFO_F);
+    //exit(EXIT_SUCCESS);
 }
 
 void printTxt(char **inputs, settings *s) {
     printf("ID:\t\t%s\n", "1.1.1");
     printf("STARTED:\t%s\n", inputs[START]);
-    printf("ENDED:\t%s\n", inputs[END]);
+    printf("ENDED:\t\t%s\n", inputs[END]);
     printf("DURATION:\t%ss\n", inputs[DURATION]);
     printf("TYPE:\t\t%s\n", inputs[TYPE]);
     printf("COMMAND:\t%s\n", inputs[CMD]);
     printf("SUBCOMMAND:\t%s\n", inputs[SUB_CMD]);
     printf("OUTPUT:\n\n%s\n\n", inputs[OUT]);
-    printf("LENGTH:\t%ld\n", strlen(inputs[OUT]));
+    printf("LENGTH:\t\t%ld\n", strlen(inputs[OUT]));
     if (s->code) {
         printf("RETURN CODE: %s\n", inputs[CODE]);
     }

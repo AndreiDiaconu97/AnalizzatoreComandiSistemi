@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 //#include <sys/stat.h>
 //#include <sys/types.h>
 //#include <sys/wait.h>
@@ -79,7 +80,6 @@ void sendData(Pk *data, settings *s) {
     /* send superstring */
     int loggerFd;
     if ((loggerFd = open(HOME TEMP_DIR LOGGER_FIFO_F, O_WRONLY)) == -1) {
-        /* probably logger was killed by someone, manage the case and start new one? */
         perror("Opening logger fifo");
         exit(EXIT_FAILURE);
     }
@@ -156,7 +156,12 @@ void executeCommand(int toShell, int fromShell, Pk *data, bool piping, bool *pro
 /* send custom signal to logger which will kill it after emtying the pipe */
 void killLogger(int loggerID) {
     kill(loggerID, SIGUSR1);
-    waitpid(loggerID, NULL, 0);
+
+    int res = kill(loggerID, 0);
+    while (res == 0 || (res < 0 && errno == EPERM)) {
+        res = kill(loggerID, 0);
+    }
+
     printf("logger killed\n");
 }
 
