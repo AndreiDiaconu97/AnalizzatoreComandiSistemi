@@ -197,6 +197,7 @@ int main(int argc, char *argv[]) {
     bool currentIsPipe = false;
     bool needToExec = false;
     int open_p = 0;
+    int subID = 1;
     for (dx = 0; dx <= strlen(data.origCmd); dx++) {
         switch (data.origCmd[dx]) {
         case '\0':
@@ -220,6 +221,7 @@ int main(int argc, char *argv[]) {
 
         if (needToExec && open_p == 0) {
             segmentcpy(data.cmd, data.origCmd, sx, dx - 1);
+            sprintf(data.subID, "%d", subID++);
             executeCommand(toShell[1], fromShell[0], &data, lastIsPipe, &proceed);
             sendData(&data, &sett);
             sx = dx + 1;

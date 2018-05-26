@@ -65,9 +65,9 @@ typedef int bool;
 #define PID_S 10  /* logger process ID max size */
 
 /* MACRO for Pack struct */
-#define PK_T 24
-#define PK_O 2048
-#define PK_R 10
+#define PK_LITTLE 50
+#define PK_BIG 2048
+#define PK_FIELDS 9
 /**
  * Only one istance of this struct is used;
  * contains all the needed information about the last analysed command
@@ -76,14 +76,16 @@ typedef struct Pack {
     /* manages commands for which shell returns no output */
     bool noOut;
 
+    /* fields actually sent to logger */
+    char subID[PK_LITTLE];
     char *beginDate;      /* should be less than PK_T */
     char *completionDate; /* should be less than PK_T */
-    char duration[PK_T];
+    char duration[PK_LITTLE];
     char origCmd[CMD_S];
-    char outType[PK_T];
+    char outType[PK_LITTLE];
     char cmd[CMD_S];
-    char out[PK_O];
-    char returnC[PK_R];
+    char out[PK_BIG];
+    char returnC[PK_LITTLE];
 } Pk;
 
 /** 
@@ -99,8 +101,6 @@ typedef struct Settings {
     bool needKill;
     int maxOut;
 
-    /* intended to be used only by logger, user should not touch */
-    int packFields;
 } settings;
 
 /* ------------------------------------------------------------------------------ */

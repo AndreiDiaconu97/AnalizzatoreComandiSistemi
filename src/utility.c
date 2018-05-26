@@ -23,6 +23,7 @@ void sendData(Pk *data, settings *s) {
     }
 
     /* elements lengths */
+    int subIDSize = strlen(data->subID) + 1;
     int beginDateSize = strlen(data->beginDate) + 1;
     int completionDateSize = strlen(data->completionDate) + 1;
     int durationSize = strlen(data->duration) + 1;
@@ -41,6 +42,7 @@ void sendData(Pk *data, settings *s) {
     outSize++; /* for ending '\0' */
 
     int dataSize = 0;
+    dataSize += subIDSize;
     dataSize += beginDateSize;
     dataSize += completionDateSize;
     dataSize += durationSize;
@@ -53,12 +55,14 @@ void sendData(Pk *data, settings *s) {
     char dataLen[65];
     sprintf(dataLen, "%d", dataSize);
 
-    /* concatenate all data in one single string */
+    /* concatenate all data in one single string (order matters) */
     int i = 0;
     char superstring[dataSize + strlen(dataLen) + 1];
     strcpy(&superstring[i], dataLen);
     i += strlen(dataLen) + 1;
 
+    strcpy(&superstring[i], data->subID);
+    i += subIDSize;
     strcpy(&superstring[i], data->beginDate);
     i += beginDateSize;
     strcpy(&superstring[i], data->completionDate);
@@ -76,6 +80,7 @@ void sendData(Pk *data, settings *s) {
     strncpy(&superstring[i], data->out, outSize);
     i += outSize;
     strcpy(&superstring[i - 1], "\0");
+
 
     strcpy(&superstring[i], data->returnC);
     i += returnSize;
@@ -124,8 +129,8 @@ void executeCommand(int toShell, int fromShell, Pk *data, bool piping, bool *pro
     snprintf(data->duration, 19, "%f", elapsed);
 
     /* read from pipe */
-    count = read(fromShell, data->out, PK_O);
-    if (count >= PK_O) {
+    count = read(fromShell, data->out, PK_BIG);
+    if (count >= PK_BIG) {
         printf("Reading from Shell: buffer is too small\nClosing...\n");
         exit(EXIT_FAILURE);
     }

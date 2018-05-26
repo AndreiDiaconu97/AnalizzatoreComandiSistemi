@@ -15,7 +15,6 @@ char *readNextSetting(char *line, size_t *len, FILE *settFp, bool *result);
 
 void initSettings(settings *s) {
     strcpy(s->cmd, "");
-    s->packFields = 8;
     s->printInfo = false;
     s->needKill = false;
 

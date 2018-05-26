@@ -16,6 +16,7 @@ void usr1_handler(int sig);
 
 /* enum for accessing to different parts of the string packet */
 enum received_data {
+    SUB_ID,
     START,
     END,
     DURATION,
@@ -40,12 +41,12 @@ enum received_data {
  * -
  * Packet structure is directly connnected to the 'Pack' struct.
  **/
-int myFifo; /* needed to usr1_handler() */
+int myFifo; /* needed for usr1_handler() */
 void logger(settings *s) {
     /* logger is closed with a custom signal */
     signal(SIGUSR1, usr1_handler);
-    char buffer[2 * CMD_S + 4 * PK_T + PK_O + PK_R]; /* must contain data received for a single comand */
-    char *inputs[s->packFields];                     /* used to reference different parts of the buffer */
+    char buffer[2 * CMD_S + 6 * PK_LITTLE + PK_BIG]; /* must contain data received from a single comand */
+    char *inputs[PK_FIELDS];                         /* used to reference different parts of the buffer */
     char size[65];                                   /* not too big, must contain a string representing one integer */
 
     /* open FIFO in read/write mode so it blocks when no data is received */
@@ -131,7 +132,7 @@ void usr1_handler(int sig) {
 }
 
 void printTxt(char **inputs, char *id) {
-    printf("ID:\t\t%s\n", id);
+    printf("ID:\t\t%s.%s\n", id, inputs[SUB_ID]);
     printf("STARTED:\t%s\n", inputs[START]);
     printf("ENDED:\t\t%s\n", inputs[END]);
     printf("DURATION:\t%ss\n", inputs[DURATION]);
