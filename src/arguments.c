@@ -8,6 +8,12 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+/* file specific functions */
+/* ------------------------------------------------------------------------------ */
+bool checkCommandBool(bool *setting, char *arg, char *val);
+bool checkCommandInt(int *setting, char *arg, char *val);
+/* ------------------------------------------------------------------------------ */
+
 /* must return true */
 bool readArguments(int argc, char **argv, settings *s, bool *updateSettings) {
     bool allValid = true;
@@ -68,7 +74,7 @@ bool evaluateCommand(settings *s, char *arg, char *val) {
         bool *reset;
         result = checkCommandBool(reset, arg, val);
         if (reset) {
-            resetSettings(s);
+            defaultSettings(s);
         }
     } else {
         printf("Invalid argument found:'%s=%s'\n", arg, val);

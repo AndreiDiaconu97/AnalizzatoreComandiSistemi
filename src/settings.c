@@ -8,6 +8,11 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+/* file specific functions */
+/* ------------------------------------------------------------------------------ */
+char *readNextSetting(char *line, size_t *len, FILE *settFp, bool *result);
+/* ------------------------------------------------------------------------------ */
+
 void initSettings(settings *s) {
     strcpy(s->cmd, "");
     s->packFields = 8;
@@ -40,77 +45,66 @@ bool loadSettings(settings *s) {
     char *line = NULL;
     char *value;
     size_t len = 0;
-
     bool result = true;
-    bool readError = false;
 
     if (settFp = fopen(HOME CONFIG_DIR SETTINGS_F, "r")) {
         /* discard first line */
         if (getline(&line, &len, settFp) == -1) {
-            readError = true;
+            result = false;
         }
 
-        /* get log name */
-        if (getline(&line, &len, settFp) == -1) {
-            readError = true;
+        /* log name */
+        value = readNextSetting(line, &len, settFp, &result);
+        strncpy(s->logF, value, strlen(value));
+
+        /* max output length */
+        value = readNextSetting(line, &len, settFp, &result);
+        if ((s->maxOut = atoi(value)) == 0) {
+            printf("maxOut: invalid value\n");
+            exit(EXIT_FAILURE);
+        }
+
+        /* return code */
+        value = readNextSetting(line, &len, settFp, &result);
+        if (!strcmp(value, "true")) {
+            s->code = true;
+        } else if (!strcmp(value, "false")) {
+            s->code = false;
         } else {
-            if ((value = strchr(line, '#')) == NULL) {
-                printf("Corrupted settings file\n");
-                exit(EXIT_FAILURE);
-            }
-            value += 2; /* move to value position */
-            strncpy(s->logF, value, strlen(value) - 1);
+            printf("code: Invalid value\n");
+            exit(EXIT_FAILURE);
         }
 
-        /* get max output length */
-        if (getline(&line, &len, settFp) == -1) {
-            readError = true;
+        if (!result) {
+            printf("loading settings: reading error\n");
         } else {
-            if ((value = strchr(line, '#')) == NULL) {
-                printf("Corrupted settings file\n");
-                exit(EXIT_FAILURE);
-            }
-            value += 2;                      /* move to value position */
-            value[strlen(value) - 1] = '\0'; /* remove ending '\n' */
-            if ((s->maxOut = atoi(value)) == 0) {
-                printf("maxOut: invalid value");
-                exit(EXIT_FAILURE);
-            }
+            printf("settings loaded\n");
         }
-
-        /* get return code bool */
-        if (getline(&line, &len, settFp) == -1) {
-            readError = true;
-        } else {
-            if ((value = strchr(line, '#')) == NULL) {
-                printf("Corrupted settings file\n");
-                exit(EXIT_FAILURE);
-            }
-            value += 2; /* move to value position */
-            if (!strcmp(value, "true\n")) {
-                s->code = true;
-            } else if (!strcmp(value, "false\n")) {
-                s->code = false;
-            } else {
-                printf("code: Invalid value\n");
-                exit(EXIT_FAILURE);
-            }
-        }
-
-        fclose(settFp);
         if (line) {
             free(line);
         }
-        if (readError) {
-            printf("loading settings: reading error\n");
-            result = false;
-        }
-        printf("settings loaded\n");
+        fclose(settFp);
     } else {
         perror("loading settings from file");
         result = false;
     }
     return result;
+}
+
+char *readNextSetting(char *line, size_t *len, FILE *settFp, bool *result) {
+    char *value;
+    /* get return code bool */
+    if (getline(&line, len, settFp) == -1) {
+        result = false;
+    } else {
+        if ((value = strchr(line, '#')) == NULL) {
+            printf("Corrupted settings file\n");
+            exit(EXIT_FAILURE);
+        }
+        value += 2;                      /* move to value position */
+        value[strlen(value) - 1] = '\0'; /* remove ending '\n' */
+    }
+    return value;
 }
 
 bool saveSettings(settings *s) {
@@ -122,7 +116,7 @@ bool saveSettings(settings *s) {
     if (mkdir(HOME CONFIG_DIR, 0777) && errno != EEXIST) {
         printf("Error while trying to create %s folder\n", CONFIG_DIR);
     }
-    
+
     /* create config file in non-existent and save data from a settings struct */
     if ((settFd = open(HOME CONFIG_DIR SETTINGS_F, O_WRONLY | O_TRUNC | O_CREAT, 0777)) != -1) {
         write(settFd, "---- USER SETTINGS --------------------------\n", 46);

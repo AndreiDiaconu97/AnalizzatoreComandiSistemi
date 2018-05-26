@@ -98,11 +98,14 @@ typedef struct Settings {
     int packFields;
 } settings;
 
+/* ------------------------------------------------------------------------------ */
+/**
+ * List of globally available functions
+ **/
+
 /* arguments.c */
 bool readArguments(int argc, char **argv, settings *s, bool *updateSettings);
 bool evaluateCommand(settings *s, char *arg, char *val);
-bool checkCommandBool(bool *setting, char *arg, char *val);
-bool checkCommandInt(int *setting, char *arg, char *val);
 
 /* settings.c */
 void initSettings(settings *s);
