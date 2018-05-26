@@ -34,8 +34,8 @@ int main(int argc, char *argv[]) {
 
     /* processes IDs */
     int fatherID = getpid();
-    int loggerID;
-    int shellID;
+    int loggerID = -1;
+    int shellID = -1;
 
     /******************************************************************************/
     /******************************** LOGGER SETUP ********************************/

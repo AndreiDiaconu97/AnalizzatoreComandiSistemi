@@ -2,13 +2,15 @@ AnalizzatoreComandiSistemi:
   ☐ @critical Rename project folder to LABSO1-2017_2018--MAT01_MAT02_MAT03_MAT04
   ☐ Clean code
   ☐ Comment code
+  ☐ Should put all function declarations in header?
 
 Here a TO-DO list for every file
   logger.c:
     ☐ @high implement log formatting ("txt" and "csv")
     ☐ implement statistical info (input length,...)
     ☐ settings as --code=<bool> should be given for every packet and not only once per logger (send flags after packet size? 010010??)
-  main.c:
+    ☐ @critical implement command ID
+    main.c:
     settings:
       ☐ @high save settings and restart logger only if needed; watch in readArguments() and saveSettings()
       ☐ @low improve user customization for MACROed variables (es.: command size limit)

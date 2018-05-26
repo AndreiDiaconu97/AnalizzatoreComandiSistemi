@@ -8,7 +8,7 @@ typedef int bool;
 #define false 0
 
 /* ------------------------------------------------------------------------------ */
-/** following macro can be used toghether for pathing in the specified form:
+/** following macro can be used together for pathing in the specified form:
  * -
  * HOME XXX_DIR XXX_F
  * -
@@ -98,13 +98,17 @@ typedef struct Settings {
     int packFields;
 } settings;
 
-/* argumentsUtility.c */
-void initSettings(settings *s);
-void resetSettings(settings *s);
-bool saveSettings(settings *s);
-bool loadSettings(settings *s);
+/* arguments.c */
 bool readArguments(int argc, char **argv, settings *s, bool *updateSettings);
 bool evaluateCommand(settings *s, char *arg, char *val);
+bool checkCommandBool(bool *setting, char *arg, char *val);
+bool checkCommandInt(int *setting, char *arg, char *val);
+
+/* settings.c */
+void initSettings(settings *s);
+void defaultSettings(settings *s);
+bool saveSettings(settings *s);
+bool loadSettings(settings *s);
 void showSettings(settings *s);
 void printInfo(settings *s);
 

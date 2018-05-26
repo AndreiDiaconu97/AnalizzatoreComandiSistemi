@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
 #include <unistd.h>
 
 void initSettings(settings *s) {
@@ -15,11 +16,11 @@ void initSettings(settings *s) {
     /* check for existing user configuration */
     if (!loadSettings(s)) {
         printf("restoring file...\n");
-        resetSettings(s);
+        defaultSettings(s);
     }
 }
 
-void resetSettings(settings *s) {
+void defaultSettings(settings *s) {
     /* restore default settings */
     strcpy(s->logF, LOG_F);
 
@@ -117,11 +118,12 @@ bool saveSettings(settings *s) {
     char num[20];
     bool result = true;
 
-    /* create config folder if non-existant and check for errors */
+    /* create config folder if non-existent and check for errors */
     if (mkdir(HOME CONFIG_DIR, 0777) && errno != EEXIST) {
         printf("Error while trying to create %s folder\n", CONFIG_DIR);
     }
-    /* create config file in non-existant and save data from a settings struct */
+    
+    /* create config file in non-existent and save data from a settings struct */
     if ((settFd = open(HOME CONFIG_DIR SETTINGS_F, O_WRONLY | O_TRUNC | O_CREAT, 0777)) != -1) {
         write(settFd, "---- USER SETTINGS --------------------------\n", 46);
 
@@ -147,97 +149,6 @@ bool saveSettings(settings *s) {
     } else {
         perror("saving settings");
         result = false;
-    }
-    return result;
-}
-
-/* must return true */
-bool readArguments(int argc, char **argv, settings *s, bool *updateSettings) {
-    bool allValid = true;
-    char *tmpArg, *tmpVal;
-
-    /* read program arguments */
-    int i;
-    for (i = 1; i < argc; i++) {
-        /* help command found */
-        if ((strcmp(argv[i], "help") == 0) || (strcmp(argv[i], "h") == 0)) {
-            s->printInfo = true;
-        }
-        /* command found */
-        else if (strncmp(argv[i], "-", 1) != 0) {
-            strcpy(s->cmd, argv[i]);
-        } else { /* user argument found */
-            *updateSettings = true;
-            /* search for '=', if not found search for ' ' separator */
-            tmpVal = strchr(argv[i], '=');
-            if (tmpVal == NULL) {
-                tmpVal = strchr(argv[i], ' ');
-                if (tmpVal == NULL) {
-                    printf("Separator not found\n");
-                    allValid = false;
-                }
-            }
-            if (allValid) {
-                /* if no invalid command is found until now, proceed evaluating actual argument */
-                tmpArg = argv[i];
-                tmpVal[0] = '\0';
-                tmpVal++;
-                allValid = evaluateCommand(s, tmpArg, tmpVal);
-            }
-        }
-        if (!allValid) {
-            break;
-        }
-    }
-    return allValid;
-}
-
-bool evaluateCommand(settings *s, char *arg, char *val) {
-    bool result = false;
-
-    if ((!strcmp(arg, "--logfile")) || (!strcmp(arg, "-log"))) {
-        strcpy(s->logF, val);
-        result = true;
-    } else if ((!strcmp(arg, "--maxOutput")) || (!strcmp(arg, "-mo"))) {
-        if (!strncmp(val, "-", 1)) {
-            printf("Command '%s': invalid negative number\n", arg);
-        } else if (atoi(val)) { //checking for integer value
-            s->maxOut = atoi(val);
-            result = true;
-        } else {
-            printf("Command '%s': couldn't parse value '%s'\n", arg, val);
-        }
-    } else if ((!strcmp(arg, "--code")) || (!strcmp(arg, "-c"))) {
-        result = true;
-        if (!strcmp(val, "true")) {
-            s->code = true;
-        } else if (!strcmp(val, "false")) {
-            s->code = false;
-        } else {
-            printf("Argument:%s - Invalid input:%s\n", arg, val);
-            result = false;
-        }
-    } else if ((!strcmp(arg, "--help")) || (!strcmp(arg, "-h"))) {
-        result = true;
-        if (!strcmp(val, "true")) {
-            s->printInfo = true;
-        } else if (!strcmp(val, "false")) {
-            s->printInfo = false;
-        } else {
-            printf("Argument:%s - Invalid input:%s\n", arg, val);
-            result = false;
-        }
-    } else if ((!strcmp(arg, "--default")) || (!strcmp(arg, "-d"))) {
-        result = true;
-        if (!strcmp(val, "true")) {
-            resetSettings(s);
-        } else if (!strcmp(val, "false")) {
-        } else {
-            printf("Argument:%s - Invalid input:%s\n", arg, val);
-            result = false;
-        }
-    } else {
-        printf("Invalid argument found:'%s=%s'\n", arg, val);
     }
     return result;
 }
