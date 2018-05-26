@@ -1,12 +1,10 @@
 #include "myLibrary.h"
-//#include <errno.h>
 #include <fcntl.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
-//#include <sys/types.h>
 #include <sys/wait.h>
 #include <time.h>
 #include <unistd.h>
@@ -52,6 +50,7 @@ int main(int argc, char *argv[]) {
     } else {
         /* existing file found, now read */
         int pIDSize = read(pidFD, logIDbuffer, sizeof logIDbuffer);
+        logIDbuffer[pIDSize] = '\0';
         loggerID = atoi(logIDbuffer);
         if (getpgid(loggerID) < 0) {
             /* logger non existent */
@@ -63,13 +62,25 @@ int main(int argc, char *argv[]) {
                 needNew = true;
                 kill(loggerID, SIGKILL);
             }
-            printf("FIFO found\n");
             close(fifoFD);
         }
     }
     close(pidFD);
 
-    /* uèdate settings file and logger if needed */
+    /* 'kill' special command check (kills logger) */
+    if (sett.needKill == true) {
+        if (updateSettings) {
+            saveSettings(&sett);
+        }
+        if (needNew) {
+            printf("no logger\n");
+        } else {
+            killLogger(loggerID);
+        }
+        exit(EXIT_SUCCESS);
+    }
+
+    /* update settings file and logger if needed */
     if (updateSettings) {
         saveSettings(&sett);
         if (!needNew) {
@@ -85,16 +96,6 @@ int main(int argc, char *argv[]) {
     if (strcmp(sett.cmd, "") == 0) {
         printf("No command found, closing...\n");
         exit(EXIT_FAILURE);
-    }
-
-    /* 'kill' special command check (kills logger) */
-    if (!strcmp(sett.cmd, "kill")) {
-        if (needNew) {
-            printf("no logger\n");
-        } else {
-            killLogger(loggerID);
-        }
-        exit(EXIT_SUCCESS);
     }
 
     if (!needNew) {
@@ -131,7 +132,7 @@ int main(int argc, char *argv[]) {
             /* saving childID on file */
             sprintf(logIDbuffer, "%d", loggerID);
             pidFD = open(HOME TEMP_DIR LOG_PID_F, O_WRONLY | O_TRUNC | O_CREAT, 0777);
-            if (write(pidFD, logIDbuffer, strlen(logIDbuffer) + 1) == -1) {
+            if (write(pidFD, logIDbuffer, strlen(logIDbuffer)) == -1) {
                 perror("Saving result");
                 exit(EXIT_FAILURE);
             }

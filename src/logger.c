@@ -8,8 +8,11 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-void printTxt(char **inputs);
+/* file specific functions */
+/* ------------------------------------------------------------------------------ */
+void printTxt(char **inputs, char *id);
 void usr1_handler(int sig);
+/* ------------------------------------------------------------------------------ */
 
 /* enum for accessing to different parts of the string packet */
 enum received_data {
@@ -44,12 +47,24 @@ void logger(settings *s) {
     char buffer[2 * CMD_S + 4 * PK_T + PK_O + PK_R]; /* must contain data received for a single comand */
     char *inputs[s->packFields];                     /* used to reference different parts of the buffer */
     char size[65];                                   /* not too big, must contain a string representing one integer */
-    int count = -1;
 
     /* open FIFO in read/write mode so it blocks when no data is received */
     if ((myFifo = open(HOME TEMP_DIR LOGGER_FIFO_F, O_RDWR, 0777)) == -1) {
         perror("Logger: opening fifo");
         exit(EXIT_FAILURE);
+    }
+
+    /* id count is stored in a file */
+    int idCountFd;
+    if ((idCountFd = open(HOME TEMP_DIR ID_COUNT_F, O_RDWR, 0777)) == -1) {
+        perror("Opening id counter file");
+
+        printf("creating new one\n");
+        idCountFd = open(HOME TEMP_DIR ID_COUNT_F, O_RDWR | O_TRUNC | O_CREAT, 0777);
+        if (write(idCountFd, "0", strlen("0")) == -1) {
+            perror("Saving count");
+            exit(EXIT_FAILURE);
+        }
     }
 
     /* create log folder if non-existant and check for errors */
@@ -70,6 +85,9 @@ void logger(settings *s) {
     close(myLog);
 
     ///* actual program *///
+    int count;
+    int id;
+    char idBuffer[32];
     while (1) {
         /* read next data-packet size */
         size[0] = '\0';
@@ -77,6 +95,7 @@ void logger(settings *s) {
             read(myFifo, buffer, 1);
             /* exit condition */
             if (!strncmp(buffer, "!", 1)) {
+                close(idCountFd);
                 remove(HOME TEMP_DIR LOG_PID_F);
                 exit(EXIT_SUCCESS);
             }
@@ -94,7 +113,16 @@ void logger(settings *s) {
                 inputs[inTmp++] = &buffer[i + 1];
             }
         }
-        printTxt(inputs);
+
+        lseek(idCountFd, 0L, SEEK_SET);
+        count = read(idCountFd, idBuffer, sizeof idBuffer);
+        idBuffer[count] = '\0';
+        id = atoi(idBuffer) + 1;
+        sprintf(idBuffer, "%d", id);
+        lseek(idCountFd, 0L, SEEK_SET);
+        write(idCountFd, idBuffer, strlen(idBuffer));
+
+        printTxt(inputs, idBuffer);
     }
 }
 
@@ -102,8 +130,8 @@ void usr1_handler(int sig) {
     write(myFifo, "!", strlen("!") + 1);
 }
 
-void printTxt(char **inputs) {
-    printf("ID:\t\t%s\n", "1.1.1");
+void printTxt(char **inputs, char *id) {
+    printf("ID:\t\t%s\n", id);
     printf("STARTED:\t%s\n", inputs[START]);
     printf("ENDED:\t\t%s\n", inputs[END]);
     printf("DURATION:\t%ss\n", inputs[DURATION]);

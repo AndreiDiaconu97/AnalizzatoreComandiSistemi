@@ -42,11 +42,15 @@ typedef int bool;
 #endif
 
 #ifndef LOG_PID_F
-#define LOG_PID_F "loggerPid.txt"
+#define LOG_PID_F "loggerPid"
 #endif
 
 #ifndef LOGGER_FIFO_F
 #define LOGGER_FIFO_F "loggerFifo"
+#endif
+
+#ifndef ID_COUNT_F
+#define ID_COUNT_F "idCount"
 #endif
 
 #ifndef SETTINGS_F
@@ -92,6 +96,7 @@ typedef struct Settings {
 
     bool printInfo;
     bool code;
+    bool needKill;
     int maxOut;
 
     /* intended to be used only by logger, user should not touch */

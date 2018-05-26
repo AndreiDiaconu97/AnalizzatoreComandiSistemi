@@ -17,6 +17,7 @@ void initSettings(settings *s) {
     strcpy(s->cmd, "");
     s->packFields = 8;
     s->printInfo = false;
+    s->needKill = false;
 
     /* check for existing user configuration */
     if (!loadSettings(s)) {
@@ -55,7 +56,7 @@ bool loadSettings(settings *s) {
 
         /* log name */
         value = readNextSetting(line, &len, settFp, &result);
-        strncpy(s->logF, value, strlen(value));
+        strcpy(s->logF, value);
 
         /* max output length */
         value = readNextSetting(line, &len, settFp, &result);
@@ -159,8 +160,9 @@ void printInfo(settings *s) {
     printf("---------------------------------------------------------------------------------------------------------\n");
     if (s->printInfo) {
         printf("List of compatible arguments:\n");
-        printf("-log\t| --logfile\t:\t<str>\tlog file name (NOT USABLE NOW)\n");
+        printf("-log\t| --logfile\t:\t<str>\tlog file name\n");
         printf("-h\t| --help\t:\t<bool>\tset true in order to display arguments list\n");
+        printf("-k\t| --kill\t:\t<bool>\tkills logger process");
         printf("-d\t| --default\t:\t<bool>\tfactory reset\n");
         printf("-c\t| --code\t:\t<bool>\tprints command/subcommand return code on log file\n");
         printf("-mo\t| --maxOutput\t:\t<int>\tmaximum length for command/subcommand output result on log file\n");

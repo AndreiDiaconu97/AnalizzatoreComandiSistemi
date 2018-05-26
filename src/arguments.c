@@ -17,7 +17,6 @@ bool checkCommandInt(int *setting, char *arg, char *val);
 /* must return true */
 bool readArguments(int argc, char **argv, settings *s, bool *updateSettings) {
     bool allValid = true;
-    char *tmpArg, *tmpVal;
 
     /* read program arguments */
     int i;
@@ -33,6 +32,7 @@ bool readArguments(int argc, char **argv, settings *s, bool *updateSettings) {
         /* typical arguments have a value to be read */
         else {
             *updateSettings = true;
+            char *tmpArg, *tmpVal;
             /* search for '=', if not found search for ' ' separator */
             tmpVal = strchr(argv[i], '=');
             if (tmpVal == NULL) {
@@ -70,6 +70,8 @@ bool evaluateCommand(settings *s, char *arg, char *val) {
         result = checkCommandBool(&s->code, arg, val);
     } else if ((!strcmp(arg, "--help")) || (!strcmp(arg, "-h"))) {
         result = checkCommandBool(&s->printInfo, arg, val);
+    } else if ((!strcmp(arg, "--kill")) || (!strcmp(arg, "-k"))) {
+        result = checkCommandBool(&s->needKill, arg, val);
     } else if ((!strcmp(arg, "--default")) || (!strcmp(arg, "-d"))) {
         bool *reset;
         result = checkCommandBool(reset, arg, val);

@@ -20,14 +20,16 @@ CFLAGS += -D CFG_DIR="\"/$(CFG_DIR)/\""
 CFLAGS += -D LOG_DIR="\"/$(LOG_DIR)/\""
 
 # program files #
-LOG_F = log.txt
-LOG_PID_F = loggerPid.txt
-LOGGER_FIFO_F = loggerFifo
-SETTINGS_F = user_settings.txt
+LOG_F := log.txt
+LOG_PID_F := loggerPid
+LOGGER_FIFO_F := loggerFifo
+SETTINGS_F := user_settings.txt
+ID_COUNT_F := idCount
 CFLAGS += -D  LOG_F=\"$(LOG_F)\"
 CFLAGS += -D  LOG_PID_F=\"$(LOG_PID_F)\"
 CFLAGS += -D  LOGGER_FIFO_F=\"$(LOGGER_FIFO_F)\"
 CFLAGS += -D  SETTINGS_F=\"$(SETTINGS_F)\"
+CFLAGS += -D  ID_COUNT_F=\"$(ID_COUNT_F)\"
 
 
 ## managed files ##
@@ -67,6 +69,7 @@ help h:
 	@ echo "LOG_F\t\t: log filename"	
 	@ echo "LOG_PID_F\t: file containing process ID of running logger"	
 	@ echo "LOGGER_FIFO_F\t: fifo used for fathers-logger data sending"	
+	@ echo "ID_COUNT_F\t: name of file containing latest id used for command in log"	
 	@ echo "SETTINGS_F\t: user settings filename"	
 	@ echo ""
 	@ echo "Path/Directory list:"
