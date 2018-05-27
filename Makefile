@@ -92,7 +92,6 @@ help h:
 # can still contain temporary files of running logger.
 ##
 clean c:
-	@ rm -f $(BIN_DIR)/$(EXEC) $(TMP_DIR)/*
 	@ rm -rf $(BIN_DIR) $(TMP_DIR)
 	@ echo "Project cleaned"
 	
