@@ -86,7 +86,7 @@ int main(int argc, char *argv[]) {
     if (updateSettings) {
         saveSettings(&sett);
         printf("Settings will be applied with logger restart\n");
-        printf("To restart logger use -k=true and type again command\n");
+        printf("To restart logger use -k=true and type again command\n\n");
     }
 
     /* close program if command is empty */
@@ -97,8 +97,10 @@ int main(int argc, char *argv[]) {
 
     if (!needNew) {
         /* check for log file existence */
-        if (open(sett.logF, O_RDONLY, 0777) == -1) {
-            printf("Log file not found, creating new one\n");
+        char logFile[2048];
+        sprintf(logFile, "%s%s", HOME LOG_DIR, sett.logF);
+        if (open(logFile, O_RDONLY, 0777) == -1) {
+            printf("Log file not found\n");
             killLogger(loggerID);
             needNew = true;
         }
@@ -175,11 +177,12 @@ int main(int argc, char *argv[]) {
     /******************************************************************************/
     /********************************* MAIN PROGRAM *******************************/
     /******************************************************************************/
-    //showSettings(&sett);
-    //printf("Father ID: %d\n", fatherID);
-    //printf("Logger ID: %d\n", loggerID);
-    //printf("Shell  ID: %d\n", shellID);
-    //printf("\nCommand: %s\n", sett.cmd);
+    showSettings(&sett);
+    printf("Father ID: %d\n", fatherID);
+    printf("Logger ID: %d\n", loggerID);
+    printf("Shell  ID: %d\n", shellID);
+    printf("\nCommand: %s\n", sett.cmd);
+    printf("Output:\n\n");
 
     signal(SIGUSR1, unpauser);
     close(toShell[0]);

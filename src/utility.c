@@ -164,7 +164,7 @@ void killLogger(int loggerID) {
         sleep(1);
         res = kill(loggerID, 0);
     }
-    printf("logger killed\n");
+    printf("Logger killed\n\n");
 }
 
 char *getcTime() {
