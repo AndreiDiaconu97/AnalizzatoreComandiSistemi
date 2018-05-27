@@ -85,8 +85,8 @@ int main(int argc, char *argv[]) {
     /* update settings file and logger if needed */
     if (updateSettings) {
         saveSettings(&sett);
-        printf("Settings will be applied with logger restart\n");
-        printf("To restart logger use -k=true and type again command\n\n");
+        printf("Settings will be applied on next logger loading\n");
+        printf("To restart logger use -k=true\n\n");
     }
 
     /* close program if command is empty */

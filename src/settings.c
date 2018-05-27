@@ -13,6 +13,10 @@
 char *readNextSetting(char *line, size_t *len, FILE *settFp, bool *result);
 /* ------------------------------------------------------------------------------ */
 
+
+/**
+ * loads settings from configuration file and restores to default if needed 
+ **/
 void initSettings(settings *s) {
     strcpy(s->cmd, "");
     s->printInfo = false;
@@ -25,6 +29,10 @@ void initSettings(settings *s) {
     }
 }
 
+
+/**
+ * changes all settings to default ones
+ **/
 void defaultSettings(settings *s) {
     /* restore default settings */
     strcpy(s->logF, LOG_F);
@@ -41,6 +49,10 @@ void defaultSettings(settings *s) {
     }
 }
 
+
+/**
+ * reads line by line from user settings file and changes actual settings accordingly
+ **/
 bool loadSettings(settings *s) {
     FILE *settFp;
     char *line = NULL;
@@ -96,6 +108,10 @@ bool loadSettings(settings *s) {
     return result;
 }
 
+
+/**
+ * used byloadSettings(1)
+ **/
 char *readNextSetting(char *line, size_t *len, FILE *settFp, bool *result) {
     char *value;
     /* get return code bool */
@@ -156,6 +172,10 @@ bool saveSettings(settings *s) {
     return result;
 }
 
+
+/**
+ * prints on screen a list containing current settings
+ **/
 void showSettings(settings *s) {
     printf("--- SETTINGS ---------------------------\n");
     printf("logfile:\t%s\n", s->logF);
@@ -165,6 +185,10 @@ void showSettings(settings *s) {
     printf("----------------------------------------\n\n");
 }
 
+
+/**
+ * prints on screen a lsit containing info about supported custom commands
+ **/
 void printInfo(settings *s) {
     printf("---------------------------------------------------------------------------------------------------------\n");
     if (s->printInfo) {

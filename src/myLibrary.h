@@ -81,8 +81,8 @@ typedef struct Pack {
     char cmdID[PK_LITTLE];
     char shellID[PK_LITTLE];
     char fatherID[PK_LITTLE];
-    char *beginDate;      /* should be less than PK_LITTLE */
-    char *completionDate; /* should be less than PK_LITTLE */
+    char *beginDate;      /* must be less than PK_LITTLE */
+    char *completionDate; /* must be less than PK_LITTLE */
     char duration[PK_LITTLE];
     char origCmd[CMD_S];
     char outType[PK_LITTLE];

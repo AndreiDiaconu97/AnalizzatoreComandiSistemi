@@ -8,6 +8,9 @@
 #include <time.h>
 #include <unistd.h>
 
+/**
+ * copies to destination string a segment of source string
+ **/
 void segmentcpy(char *dst, char *src, int from, int to) {
     int x;
     for (x = 0; x <= to - from; x++) {
@@ -16,6 +19,9 @@ void segmentcpy(char *dst, char *src, int from, int to) {
     dst[to - from + 1] = '\0';
 }
 
+/**
+ * append data of one Pack struct to a superstring 
+ **/
 int appendPack(Pk *data, settings *s, char *superstring) {
     /* check if return code flag is set */
     if (!s->code) {
@@ -88,6 +94,9 @@ int appendPack(Pk *data, settings *s, char *superstring) {
     return dataSize;
 }
 
+/**
+ * sends command to shell and changes Pack struct accordingly
+ **/
 void executeCommand(int toShell, int fromShell, Pk *data, bool piping, bool *proceed) {
     clock_t t;
     int count;
@@ -154,7 +163,10 @@ void executeCommand(int toShell, int fromShell, Pk *data, bool piping, bool *pro
     }
 }
 
-/* send custom signal to logger which will kill it after emtying the pipe */
+
+/**
+ * sends a custom SIGUSR1 signal to logger process, which will make it close 
+ **/
 void killLogger(int loggerID) {
     kill(loggerID, SIGUSR1);
 
@@ -167,6 +179,10 @@ void killLogger(int loggerID) {
     printf("Logger killed\n\n");
 }
 
+
+/**
+ * gets current time as formatted string 
+ **/
 char *getcTime() {
     time_t current_time;
     char *c_time_string;

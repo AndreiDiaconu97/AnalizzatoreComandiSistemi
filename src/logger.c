@@ -193,9 +193,14 @@ void logger(settings *s) {
     }
 }
 
+
+/**
+ * used to close safely the logger process
+ **/
 void usr1_handler(int sig) {
     write(myFifo, "!", strlen("!") + 1);
 }
+
 
 void printFormatted(char **Pk_fields, int commandID, f_style formatStyle) {
     if (formatStyle == TXT) {
@@ -205,6 +210,10 @@ void printFormatted(char **Pk_fields, int commandID, f_style formatStyle) {
     }
 }
 
+
+/**
+ * prints first line in case a CSV formatted log is used
+ **/
 void printCSVfields() {
     printf("COMMAND ID,");
     printf("LOGGER PID,");
@@ -221,6 +230,10 @@ void printCSVfields() {
     printf("RETURN CODE\n");
 }
 
+
+/**
+ * prints on log using a CSV format style
+ **/
 void printCSV(char **Pk_fields, int commandID) {
     printf("\"%d.%s\",", commandID, Pk_fields[CMD_ID]);
     printf("\"%d\",", getpid());
@@ -246,6 +259,10 @@ void printCSV(char **Pk_fields, int commandID) {
     printf("\n");
 }
 
+
+/**
+ * prints on log using a TXT format style
+ **/
 void printTxt(char **Pk_fields, int commandID) {
     printf("COMMAND ID:\t\t%d.%s\n", commandID, Pk_fields[CMD_ID]);
     printf("LOGGER PID:\t\t%d\n", getpid());
