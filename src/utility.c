@@ -16,14 +16,15 @@ void segmentcpy(char *dst, char *src, int from, int to) {
     dst[to - from + 1] = '\0';
 }
 
-void sendData(Pk *data, settings *s) {
-    /* check is return code flag is set */
+int appendPack(Pk *data, settings *s, char *superstring) {
+    /* check if return code flag is set */
     if (!s->code) {
         strcpy(data->returnC, "false");
     }
+    char *pos = superstring + 0;
 
     /* elements lengths */
-    int subIDSize = strlen(data->logID) + 1;
+    int cmdIDSize = strlen(data->cmdID) + 1;
     int fatherIDSize = strlen(data->fatherID) + 1;
     int shellIDSize = strlen(data->shellID) + 1;
     int beginDateSize = strlen(data->beginDate) + 1;
@@ -44,7 +45,7 @@ void sendData(Pk *data, settings *s) {
     outSize++; /* for ending '\0' */
 
     int dataSize = 0;
-    dataSize += subIDSize;
+    dataSize += cmdIDSize;
     dataSize += fatherIDSize;
     dataSize += shellIDSize;
     dataSize += beginDateSize;
@@ -56,50 +57,35 @@ void sendData(Pk *data, settings *s) {
     dataSize += outSize;
     dataSize += returnSize;
 
-    char dataLen[65];
-    sprintf(dataLen, "%d", dataSize);
-
     /* concatenate all data in one single string (order matters) */
-    int i = 0;
-    char superstring[dataSize + strlen(dataLen) + 1];
-    strcpy(&superstring[i], dataLen);
-    i += strlen(dataLen) + 1;
 
-    strcpy(&superstring[i], data->logID);
-    i += subIDSize;
-    strcpy(&superstring[i], data->fatherID);
-    i += fatherIDSize;
-    strcpy(&superstring[i], data->shellID);
-    i += shellIDSize;
-    strcpy(&superstring[i], data->beginDate);
-    i += beginDateSize;
-    strcpy(&superstring[i], data->completionDate);
-    i += completionDateSize;
-    strcpy(&superstring[i], data->duration);
-    i += durationSize;
-    strcpy(&superstring[i], data->outType);
-    i += outTypeSize;
-    strcpy(&superstring[i], data->origCmd);
-    i += origCmdSize;
-    strcpy(&superstring[i], data->cmd);
-    i += cmdSize;
+    strcpy(pos, data->cmdID);
+    pos += cmdIDSize;
+    strcpy(pos, data->fatherID);
+    pos += fatherIDSize;
+    strcpy(pos, data->shellID);
+    pos += shellIDSize;
+    strcpy(pos, data->beginDate);
+    pos += beginDateSize;
+    strcpy(pos, data->completionDate);
+    pos += completionDateSize;
+    strcpy(pos, data->duration);
+    pos += durationSize;
+    strcpy(pos, data->outType);
+    pos += outTypeSize;
+    strcpy(pos, data->origCmd);
+    pos += origCmdSize;
+    strcpy(pos, data->cmd);
+    pos += cmdSize;
 
     /* managing output limit */
-    strncpy(&superstring[i], data->out, outSize);
-    i += outSize;
-    strcpy(&superstring[i - 1], "\0");
+    strncpy(pos, data->out, outSize);
+    pos += outSize;
+    strcpy(pos - 1, "\0");
 
-    strcpy(&superstring[i], data->returnC);
-    i += returnSize;
-
-    /* send superstring */
-    int loggerFd;
-    if ((loggerFd = open(HOME TEMP_DIR LOGGER_FIFO_F, O_WRONLY)) == -1) {
-        perror("Opening logger fifo");
-        exit(EXIT_FAILURE);
-    }
-    write(loggerFd, superstring, dataSize + strlen(dataLen) + 1);
-    close(loggerFd);
+    strcpy(pos, data->returnC);
+    pos += returnSize;
+    return dataSize;
 }
 
 void executeCommand(int toShell, int fromShell, Pk *data, bool piping, bool *proceed) {

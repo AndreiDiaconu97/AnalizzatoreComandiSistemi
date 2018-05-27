@@ -1,6 +1,7 @@
 #include "myLibrary.h"
 #include <errno.h>
 #include <fcntl.h>
+#include <limits.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -29,7 +30,7 @@ int main(int argc, char *argv[]) {
         printf("CLOSING PROGRAM\n");
         exit(EXIT_FAILURE);
     }
-    printInfo(&sett);
+    //printInfo(&sett);
 
     /* processes IDs */
     int fatherID = getpid();
@@ -84,10 +85,8 @@ int main(int argc, char *argv[]) {
     /* update settings file and logger if needed */
     if (updateSettings) {
         saveSettings(&sett);
-        if (!needNew) {
-            printf("Settings will be applied with logger restart\n");
-        }
-        printf("\n");
+        printf("Settings will be applied with logger restart\n");
+        printf("To restart logger use -k=true and type again command\n");
     }
 
     /* close program if command is empty */
@@ -98,7 +97,7 @@ int main(int argc, char *argv[]) {
 
     if (!needNew) {
         /* check for log file existence */
-        if (open(HOME LOG_DIR LOG_F, O_RDONLY, 0777) == -1) {
+        if (open(sett.logF, O_RDONLY, 0777) == -1) {
             printf("Log file not found, creating new one\n");
             killLogger(loggerID);
             needNew = true;
@@ -112,17 +111,6 @@ int main(int argc, char *argv[]) {
         /* try to create fifo files (error managing is not a problem here) */
         if ((mkfifo(HOME TEMP_DIR LOGGER_FIFO_F, 0777) == -1) && (errno != EEXIST)) {
             perror(LOGGER_FIFO_F "creation");
-            exit(EXIT_FAILURE);
-        }
-
-        /* try to create fifo for session logID */
-        int idCountFd;
-        if (mkfifo(HOME TEMP_DIR ID_COUNT_F, 0777) == 0) {
-            printf("creating new ID counter file\n");
-        } else if ((mkfifo(HOME TEMP_DIR ID_COUNT_F, 0777) == -1) && (errno == EEXIST)) {
-            printf("Session logID fifo arleady exists\n");
-        } else {
-            perror("Opening session logID fifo");
             exit(EXIT_FAILURE);
         }
 
@@ -187,11 +175,11 @@ int main(int argc, char *argv[]) {
     /******************************************************************************/
     /********************************* MAIN PROGRAM *******************************/
     /******************************************************************************/
-    showSettings(&sett);
-    printf("Father ID: %d\n", fatherID);
-    printf("Logger ID: %d\n", loggerID);
-    printf("Shell  ID: %d\n", shellID);
-    printf("\nCommand: %s\n", sett.cmd);
+    //showSettings(&sett);
+    //printf("Father ID: %d\n", fatherID);
+    //printf("Logger ID: %d\n", loggerID);
+    //printf("Shell  ID: %d\n", shellID);
+    //printf("\nCommand: %s\n", sett.cmd);
 
     signal(SIGUSR1, unpauser);
     close(toShell[0]);
@@ -208,90 +196,86 @@ int main(int argc, char *argv[]) {
     sprintf(tmpID, "%d", shellID);
     strcpy(data.shellID, tmpID);
 
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////
-    /* ID */
-    char idBuffer[50];
-    char subIDbuffer[50];
-    int count;
-    int id;
-    int idCountFd;
-
-    idCountFd = open(HOME TEMP_DIR ID_COUNT_F, O_RDWR, 0777);
-    count = read(idCountFd, idBuffer, sizeof idBuffer);
-    idBuffer[count] = '\0';
-    id = atoi(idBuffer) + 1;
-    sprintf(idBuffer, "%d", id);
-    printf("cID: %s\n", idBuffer);
-
-    write(idCountFd, idBuffer, strlen(idBuffer));
-    close(idCountFd);
-    // ////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////
+    char superstring[PIPE_BUF];
+    int pos;
+    for (pos = 0; pos < 10; pos++) {
+        superstring[pos] = '\0';
+    }
+    superstring[pos - 1] = '?';
 
     /* if command has && or ||, no subcommand splitting is performed */
     if (strstr(data.origCmd, "&&") || strstr(data.origCmd, "||")) {
         strcpy(data.cmd, data.origCmd);
         executeCommand(toShell[1], fromShell[0], &data, false, &proceed);
-        sendData(&data, &sett);
+        pos += appendPack(&data, &sett, superstring + pos);
         printf("%s\n", data.out);
-
-        printf("\nFINISHED\n");
-        /* close opened pipes */
-        close(toShell[1]);
-        close(fromShell[0]);
-        return EXIT_SUCCESS;
-    }
-
-    /* command factorization */
-    int sx = 0;
-    int dx = 0;
-    bool lastIsPipe = false;
-    bool currentIsPipe = false;
-    bool needToExec = false;
-    int open_p = 0;
-    int subID = 1;
-    for (dx = 0; dx <= strlen(data.origCmd); dx++) {
-        switch (data.origCmd[dx]) {
-        case '\0':
-        case ';':
-            currentIsPipe = false;
-            needToExec = true;
-            break;
-        case '|':
-            currentIsPipe = true;
-            needToExec = true;
-            break;
-        case '(':
-            open_p++;
-            break;
-        case ')':
-            open_p--;
-            break;
-        default:
-            break;
-        }
-
-        if (needToExec && open_p == 0) {
-            /* saving ID */
-            strcpy(data.logID, idBuffer);
-            sprintf(subIDbuffer, ".%d", subID++);
-            strcat(data.logID, subIDbuffer);
-
-            segmentcpy(data.cmd, data.origCmd, sx, dx - 1);
-            executeCommand(toShell[1], fromShell[0], &data, lastIsPipe, &proceed);
-            sendData(&data, &sett);
-            sx = dx + 1;
-            lastIsPipe = currentIsPipe;
-
-            /* print output on screen only if command is not piped */
-            if (!lastIsPipe) {
-                printf("%s\n", data.out);
+    } else {
+        /* command factorization */
+        int sx = 0;
+        int dx = 0;
+        bool lastIsPipe = false;
+        bool currentIsPipe = false;
+        bool needToExec = false;
+        int open_p = 0;
+        int subID = 1;
+        char tmpID[50];
+        for (dx = 0; dx <= strlen(data.origCmd); dx++) {
+            switch (data.origCmd[dx]) {
+            case '\0':
+            case ';':
+                currentIsPipe = false;
+                needToExec = true;
+                break;
+            case '|':
+                currentIsPipe = true;
+                needToExec = true;
+                break;
+            case '(':
+                open_p++;
+                break;
+            case ')':
+                open_p--;
+                break;
+            default:
+                break;
             }
+
+            if (needToExec && open_p == 0) {
+                segmentcpy(data.cmd, data.origCmd, sx, dx - 1);
+
+                // copy subID to pack
+                sprintf(tmpID, "%d", subID++);
+                strcpy(data.cmdID, tmpID);
+
+                executeCommand(toShell[1], fromShell[0], &data, lastIsPipe, &proceed);
+                pos += appendPack(&data, &sett, superstring + pos);
+                sx = dx + 1;
+                lastIsPipe = currentIsPipe;
+
+                /* print output on screen only if command is not piped */
+                if (!lastIsPipe) {
+                    printf("%s\n", data.out);
+                }
+            }
+            needToExec = false;
         }
-        needToExec = false;
     }
+    /* write superstring size at the beginning of the superstring */
+    char stringSizeStr[10];
+    sprintf(stringSizeStr, "%d", pos - 10);
+    strcpy(superstring, stringSizeStr);
+
+    /* send superstring */
+    int loggerFd;
+    if ((loggerFd = open(HOME TEMP_DIR LOGGER_FIFO_F, O_WRONLY)) == -1) {
+        perror("Opening logger fifo");
+        exit(EXIT_FAILURE);
+    }
+    write(loggerFd, superstring, pos);
+    close(loggerFd);
 
     printf("\nFINISHED\n");
-
     /* close opened pipes */
     close(toShell[1]);
     close(fromShell[0]);

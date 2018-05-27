@@ -60,15 +60,15 @@ typedef int bool;
 
 /* string lenghts */
 #define PATH_S 512
-#define CMD_S 124 /* given command max length */
-#define OUT_S 124 /* how much of the command output to save on log */
+#define CMD_S 512 /* given command max length */
+#define OUT_S 512 /* how much of the command output to save on log */
 #define PID_S 10  /* logger process ID max size */
 
 /* MACRO for Pack struct */
 #include <limits.h>
-#define PK_FIELDS 11
+#define PK_FIELD_NUM 11
 #define PK_LITTLE 50
-#define PK_BIG PIPE_BUF - (PK_FIELDS * PK_LITTLE)
+#define PK_BIG PIPE_BUF - (PK_FIELD_NUM * PK_LITTLE)
 /**
  * Only one istance of this struct is used;
  * contains all the needed information about the last analysed command
@@ -78,7 +78,7 @@ typedef struct Pack {
     bool noOut;
 
     /* fields actually sent to logger */
-    char logID[PK_LITTLE];
+    char cmdID[PK_LITTLE];
     char shellID[PK_LITTLE];
     char fatherID[PK_LITTLE];
     char *beginDate;      /* should be less than PK_LITTLE */
@@ -99,6 +99,7 @@ typedef struct Settings {
     char logF[PATH_S];
     char cmd[CMD_S];
 
+    char printStyle[20];
     bool printInfo;
     bool code;
     bool needKill;
@@ -125,7 +126,7 @@ void printInfo(settings *s);
 
 /* utility.c */
 void segmentcpy(char *dst, char *src, int from, int to);
-void sendData(Pk *data, settings *s);
+int appendPack(Pk *data, settings *s, char *superstring);
 void executeCommand(int toShell, int fromShell, Pk *data, bool piping, bool *proceed);
 void killLogger(int loggerID);
 char *getcTime();

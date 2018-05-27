@@ -5,13 +5,10 @@ AnalizzatoreComandiSistemi:
 
 Here a TO-DO list for every file
   logger.c:
-    ☐ @high implement log formatting ("txt" and "csv")
-    ☐ implement statistical info (input length,...)
-    ☐ @critical implement command ID
+    ☐ empty log when print mode changed
     main.c:
       ✔ ok @done(18-05-27 14:07)
     settings:
-      ☐ @critical  save settings and restart logger only if needed; watch in readArguments() and saveSettings()
       ☐ @critical  improve settings with useful properties
     logger setup:
       ✔ ok @done(18-05-21 16:01)
@@ -31,7 +28,7 @@ Program testing guidelines:
   ☐ play with Makefile arguments
   ☐ search for buffer overflow
   ☐ play with articulated shell commands
-  ☐ check log and output integrity
+  ✔ check log and output integrity @done(18-05-27 21:50)
   ☐ spam programs for concurrency testing
 
 
@@ -73,5 +70,8 @@ Archive:
   ✔ @critical Print command output on screen @done(18-05-27 03:06)
   ✔ settings as --code=<bool> should not restart logger @done(18-05-27 16:18)
   ✔ pass Shell pID to logger, and maybe fatherID too @done(18-05-27 15:46)
+  ✔ @high implement log formatting ("txt" and "csv") @done(18-05-27 21:43)
+  ✔ implement statistical info (input length,...) @done(18-05-27 21:43)
+  ✔ @critical implement command ID @done(18-05-27 21:43)
 
   

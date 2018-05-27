@@ -8,15 +8,23 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+typedef enum format_style {
+    CSV,
+    TXT
+} f_style;
+
 /* file specific functions */
 /* ------------------------------------------------------------------------------ */
-void printTxt(char **inputs);
+void printFormatted(char **Pk_fields, int commandID, f_style formatStyle);
+void printCSVfields();
+void printCSV(char **Pk_fields, int commandID);
+void printTxt(char **Pk_fields, int commandID);
 void usr1_handler(int sig);
 /* ------------------------------------------------------------------------------ */
 
 /* enum for accessing to different parts of the string packet */
 enum received_data {
-    ID,
+    CMD_ID,
     SENDER_PID,
     SHELL_PID,
     START,
@@ -49,8 +57,18 @@ void logger(settings *s) {
     signal(SIGUSR1, usr1_handler);
 
     char buffer[2 * CMD_S + 6 * PK_LITTLE + PK_BIG]; /* must contain data received from a single comand */
-    char *inputs[PK_FIELDS];                         /* used to reference different parts of the buffer */
-    char size[65];                                   /* not too big, must contain a string representing one integer */
+    char *Pk_fields[PK_FIELD_NUM];                   /* used to reference different parts of the buffer */
+    char size[65];
+
+    f_style formatStyle;
+    if (!strcmp(s->printStyle, "TXT")) {
+        formatStyle = TXT;
+    } else if (!strcmp(s->printStyle, "CSV")) {
+        formatStyle = CSV;
+    } else {
+        printf("ERROR: invalid formatStyle\n");
+        exit(EXIT_FAILURE);
+    }
 
     /* open FIFO in read/write mode so it blocks when no data is received */
     if ((myFifo = open(HOME TEMP_DIR LOGGER_FIFO_F, O_RDWR, 0777)) == -1) {
@@ -63,23 +81,75 @@ void logger(settings *s) {
         printf("Error while trying to create %s folder\n", CONFIG_DIR);
     }
 
-    /* keep opened the fifo containing id-count so father processes can read from with without blocking */
-    int idCountFd = open(HOME TEMP_DIR ID_COUNT_F, O_WRONLY, 0777);
-    write(idCountFd, "0", strlen("0") + 1); /* initialize session logID to 0 */
-
     /* open/create log file and move pipe to stdout */
     char logFile[PATH_S];
     strcpy(logFile, HOME LOG_DIR);
     strcat(logFile, s->logF);
     int myLog;
-    if ((myLog = open(logFile, O_WRONLY | O_APPEND | O_CREAT, 0777)) == -1) {
+    bool needToPrintFields = false;
+    f_style prevMode;
+    if ((myLog = open(logFile, O_RDONLY | O_CREAT, 0777)) == -1) {
+        // unable to create or open file => exit
         perror("Opening log file");
+        close(myLog);
         exit(EXIT_FAILURE);
+    } else {
+        char readMode[11];
+        int size = read(myLog, readMode, sizeof readMode);
+        if (size <= 0) {
+            // file empty
+            //printf("FILE EMPTY\n");
+            prevMode = formatStyle;
+            if (formatStyle == CSV) {
+                needToPrintFields = true;
+            }
+        } else {
+            if (readMode[10] == ':') {
+                //printf("TXT MODE\n");
+                prevMode = TXT;
+            } else {
+                //printf("CSV MODE\n");
+                prevMode = CSV;
+            }
+        }
     }
+    close(myLog);
+
+    if (prevMode != formatStyle) {
+        myLog = open(logFile, O_TRUNC | O_CREAT, 0777);
+        //printf("SVUOTATO\n");
+        close(myLog);
+        if (formatStyle == CSV) {
+            needToPrintFields = true;
+        }
+    }
+
+    myLog = open(logFile, O_WRONLY | O_APPEND, 0777);
     dup2(myLog, STDOUT_FILENO);
     close(myLog);
 
+    if (needToPrintFields) {
+        printCSVfields();
+    }
+
     ///* actual program *///
+    int commandID = 1;
+    char commandIDbuff[50];
+    int idFd = open(HOME TEMP_DIR ID_COUNT_F, O_RDONLY, 0777);
+    if (idFd == -1) {
+        close(idFd);
+        idFd = open(HOME TEMP_DIR ID_COUNT_F, O_WRONLY | O_CREAT | O_TRUNC, 0777);
+        if (write(idFd, "1", strlen("1")) == -1) {
+            perror("Saving new commandID");
+            exit(EXIT_FAILURE);
+        }
+        close(idFd);
+    } else {
+        int size = read(idFd, commandIDbuff, sizeof commandIDbuff);
+        commandIDbuff[size] = '\0';
+        commandID = atoi(commandIDbuff);
+    }
+
     int count;
     while (1) {
         /* read next data-packet size */
@@ -88,26 +158,38 @@ void logger(settings *s) {
             read(myFifo, buffer, 1);
             /* exit condition */
             if (!strncmp(buffer, "!", 1)) {
-                close(idCountFd);
-                remove(HOME TEMP_DIR LOG_PID_F);
+                idFd = open(HOME TEMP_DIR ID_COUNT_F, O_WRONLY, 0777);
+                sprintf(commandIDbuff, "%d", commandID);
+                write(idFd, commandIDbuff, strlen(commandIDbuff));
                 exit(EXIT_SUCCESS);
             }
             strncat(size, buffer, 1);
         } while (*buffer != '\0');
 
+        while (*buffer == '\0') {
+            read(myFifo, buffer, 1);
+        }
+
         count = read(myFifo, buffer, atoi(size));
 
         /* analysing data */
-        int inTmp = 0;
-        int i;
-        inputs[inTmp++] = buffer;
-        for (i = 0; i < count; i++) {
-            if (buffer[i] == '\0') {
-                inputs[inTmp++] = &buffer[i + 1];
+        int pos = 0;
+        while (pos < count) {
+            int field = 0;
+            Pk_fields[field] = buffer + pos;
+            //field++;
+            while (field < PK_FIELD_NUM) {
+                if (buffer[pos] == '\0') {
+                    field++;
+                    Pk_fields[field] = buffer + pos + 1;
+                    //field++;
+                }
+                pos++;
             }
+            printFormatted(Pk_fields, commandID, formatStyle);
         }
 
-        printTxt(inputs);
+        commandID++;
     }
 }
 
@@ -115,21 +197,70 @@ void usr1_handler(int sig) {
     write(myFifo, "!", strlen("!") + 1);
 }
 
-void printTxt(char **inputs) {
-    printf("ID:\t\t%s\n", inputs[ID]);
-    printf("LOGGER PID:\t\t%d\n", getpid());    
-    printf("SENDER PID:\t\t%s\n", inputs[SENDER_PID]);
-    printf("SHELL PID:\t\t%s\n", inputs[SHELL_PID]);
-    printf("STARTED:\t%s\n", inputs[START]);
-    printf("ENDED:\t%s\n", inputs[END]);
-    printf("DURATION:\t%ss\n", inputs[DURATION]);
-    printf("TYPE:\t\t%s\n", inputs[TYPE]);
-    printf("COMMAND:\t%s\n", inputs[CMD]);
-    printf("SUBCOMMAND:\t%s\n", inputs[SUB_CMD]);
-    printf("OUTPUT:\n\n%s\n\n", inputs[OUT]);
-    printf("LENGTH:\t%ld\n", strlen(inputs[OUT]));
-    if (strcmp(inputs[CODE], "false") != 0) {
-        printf("RETURN CODE:%s\n", inputs[CODE]);
+void printFormatted(char **Pk_fields, int commandID, f_style formatStyle) {
+    if (formatStyle == TXT) {
+        printTxt(Pk_fields, commandID);
+    } else if (formatStyle == CSV) {
+        printCSV(Pk_fields, commandID);
+    }
+}
+
+void printCSVfields() {
+    printf("COMMAND ID,");
+    printf("LOGGER PID,");
+    printf("SENDER PID,");
+    printf("SHELL PID,");
+    printf("STARTED,");
+    printf("ENDED,");
+    printf("DURATION,");
+    printf("TYPE,");
+    printf("COMMAND,");
+    printf("SUBCOMMAND,");
+    printf("OUTPUT LENGTH,");
+    printf("OUTPUT,");
+    printf("RETURN CODE\n");
+}
+
+void printCSV(char **Pk_fields, int commandID) {
+    printf("\"%d.%s\",", commandID, Pk_fields[CMD_ID]);
+    printf("\"%d\",", getpid());
+
+    int field;
+    for (field = 1; field < CODE; field++) {
+        int character;
+        printf("\"");
+        for (character = 0; character < strlen(Pk_fields[field]); character++) {
+            if (Pk_fields[field][character] == '"') {
+                printf("\"\"");
+            } else {
+                printf("%c", Pk_fields[field][character]);
+            }
+        }
+        printf("\",");
+    }
+    if(strcmp(Pk_fields[CODE], "false") != 0){
+        printf("\"%s\"", Pk_fields[CODE]);
+    } else {
+        printf("\"N/A\"");
+    }
+    printf("\n");
+}
+
+void printTxt(char **Pk_fields, int commandID) {
+    printf("COMMAND ID:\t\t%d.%s\n", commandID, Pk_fields[CMD_ID]);
+    printf("LOGGER PID:\t\t%d\n", getpid());
+    printf("SENDER PID:\t\t%s\n", Pk_fields[SENDER_PID]);
+    printf("SHELL PID:\t\t%s\n", Pk_fields[SHELL_PID]);
+    printf("STARTED:\t\t%s\n", Pk_fields[START]);
+    printf("ENDED:\t\t%s\n", Pk_fields[END]);
+    printf("DURATION:\t\t%ss\n", Pk_fields[DURATION]);
+    printf("TYPE:\t\t\t%s\n", Pk_fields[TYPE]);
+    printf("COMMAND:\t\t%s\n", Pk_fields[CMD]);
+    printf("SUBCOMMAND:\t\t%s\n", Pk_fields[SUB_CMD]);
+    printf("OUTPUT LENGTH:\t%ld\n", strlen(Pk_fields[OUT]));
+    printf("OUTPUT:\n\n%s\n\n", Pk_fields[OUT]);
+    if (strcmp(Pk_fields[CODE], "false") != 0) {
+        printf("RETURN CODE:\t%s\n", Pk_fields[CODE]);
     }
     printf("---------------------------------------------------\n");
 }

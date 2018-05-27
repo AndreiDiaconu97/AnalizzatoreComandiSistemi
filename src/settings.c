@@ -31,6 +31,7 @@ void defaultSettings(settings *s) {
 
     s->maxOut = OUT_S;
     s->code = true;
+    strcpy(s->printStyle, "TXT");
 
     /* save default settings */
     if (!saveSettings(s)) {
@@ -56,6 +57,10 @@ bool loadSettings(settings *s) {
         /* log name */
         value = readNextSetting(line, &len, settFp, &result);
         strcpy(s->logF, value);
+
+        /* print style */
+        value = readNextSetting(line, &len, settFp, &result);
+        strcpy(s->printStyle, value);
 
         /* max output length */
         value = readNextSetting(line, &len, settFp, &result);
@@ -125,6 +130,10 @@ bool saveSettings(settings *s) {
         write(settFd, s->logF, strlen(s->logF));
         write(settFd, "\n", strlen("\n"));
 
+        write(settFd, "PRINT_STYLE#\t", strlen("PRINT_STYLE#\t"));
+        write(settFd, s->printStyle, strlen(s->printStyle));
+        write(settFd, "\n", strlen("\n"));
+
         write(settFd, "MAX_OUT_LENGTH#\t", strlen("MAX_OUT_LENGTH#\t"));
         sprintf(num, "%d\n", s->maxOut);
         write(settFd, num, strlen(num));
@@ -149,7 +158,8 @@ bool saveSettings(settings *s) {
 
 void showSettings(settings *s) {
     printf("--- SETTINGS ---------------------------\n");
-    printf("logfile:\t%s\n", s->logF); // strrchr(s->logF, '/')
+    printf("logfile:\t%s\n", s->logF);
+    printf("print style:\t%s\n", s->printStyle);
     printf("return code:\t%s\n", s->code ? "true" : "false");
     printf("max out len:\t%d\n", s->maxOut);
     printf("----------------------------------------\n\n");
@@ -159,12 +169,13 @@ void printInfo(settings *s) {
     printf("---------------------------------------------------------------------------------------------------------\n");
     if (s->printInfo) {
         printf("List of compatible arguments:\n");
-        printf("-log\t| --logfile\t:\t<str>\tlog file name\n");
+        printf("-l\t| --logfile\t:\t<str>\tlog file name\n");
         printf("-h\t| --help\t:\t<bool>\tset true in order to display arguments list\n");
         printf("-k\t| --kill\t:\t<bool>\tkills logger process");
         printf("-d\t| --default\t:\t<bool>\tfactory reset\n");
         printf("-c\t| --code\t:\t<bool>\tprints command/subcommand return code on log file\n");
-        printf("-mo\t| --maxOutput\t:\t<int>\tmaximum length for command/subcommand output result on log file\n");
+        printf("-m\t| --maxOutput\t:\t<int>\tmaximum length for command/subcommand output result on log file\n");
+        printf("-p\t| --printStyle\t:\t<string>\tlog formatting (TXT or CSV)\n");
         printf("\n");
         printf("kill (special argument) :\tcloses logger process if existing\n");
     } else {

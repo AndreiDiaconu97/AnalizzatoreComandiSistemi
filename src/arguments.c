@@ -61,10 +61,13 @@ bool readArguments(int argc, char **argv, settings *s, bool *updateSettings) {
 bool evaluateCommand(settings *s, char *arg, char *val) {
     bool result = false;
 
-    if ((!strcmp(arg, "--logfile")) || (!strcmp(arg, "-log"))) {
+    if ((!strcmp(arg, "--logfile")) || (!strcmp(arg, "-l"))) {
         strcpy(s->logF, val);
         result = true;
-    } else if ((!strcmp(arg, "--maxOutput")) || (!strcmp(arg, "-mo"))) {
+    } else if ((!strcmp(arg, "--printStyle")) || (!strcmp(arg, "-p"))) {
+        strcpy(s->printStyle, val);
+        result = true;
+    } else if ((!strcmp(arg, "--maxOutput")) || (!strcmp(arg, "-m"))) {
         result = checkCommandInt(&s->maxOut, arg, val);
     } else if ((!strcmp(arg, "--code")) || (!strcmp(arg, "-c"))) {
         result = checkCommandBool(&s->code, arg, val);
