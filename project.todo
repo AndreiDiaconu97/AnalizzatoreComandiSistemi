@@ -15,13 +15,13 @@ Here a TO-DO list for every file
       ☐ @low improve user customization for MACROed variables (es.: command size limit)
       ☐ @low improve settings with useful properties
       ☐ pass Shell pID to logger
-      ✔ maybe can compress code regarding settings @done(18-05-26 15:42)
     logger setup:
       ✔ ok @done(18-05-21 16:01)
     shell setup:
       ✔ ok @done(18-05-21 18:04)
     main program:
-      ✔ ok @done(18-05-26 16:48)
+      ☐ @critical NEED FIX: [(pwd && ls)|wc] and  [pwd && ls|wc] should give different outputs
+      ☐ @critical Print command output on screen
   myLibrary.h:
     ☐ find if #ifndef..#define..#endif is needed with header name
   utility.c:
@@ -71,5 +71,6 @@ Archive:
   ✔ @critical fix no logger found on kill with logpID still intact @done(18-05-25 22:23)
   ✔ check if command output is successfully truncated @done(18-05-25 23:39)
   ✘ @low support special symbols for subcommand detection (&&, (), ||) @cancelled(18-05-26 15:42)
+  ✔ need settings.c refactoring @done(18-05-26 15:42)
   
   

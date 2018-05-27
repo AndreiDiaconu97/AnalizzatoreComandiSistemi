@@ -46,7 +46,7 @@ typedef int bool;
 #endif
 
 #ifndef LOGGER_FIFO_F
-#define LOGGER_FIFO_F "loggerFifo"
+#define LOGGER_FIFO_F "logger.fifo"
 #endif
 
 #ifndef ID_COUNT_F
@@ -65,9 +65,10 @@ typedef int bool;
 #define PID_S 10  /* logger process ID max size */
 
 /* MACRO for Pack struct */
-#define PK_LITTLE 50
-#define PK_BIG 2048
+#include <limits.h>
 #define PK_FIELDS 9
+#define PK_LITTLE 50
+#define PK_BIG PIPE_BUF - (PK_FIELDS * PK_LITTLE)
 /**
  * Only one istance of this struct is used;
  * contains all the needed information about the last analysed command
@@ -77,9 +78,9 @@ typedef struct Pack {
     bool noOut;
 
     /* fields actually sent to logger */
-    char subID[PK_LITTLE];
-    char *beginDate;      /* should be less than PK_T */
-    char *completionDate; /* should be less than PK_T */
+    char logID[PK_LITTLE];
+    char *beginDate;      /* should be less than PK_LITTLE */
+    char *completionDate; /* should be less than PK_LITTLE */
     char duration[PK_LITTLE];
     char origCmd[CMD_S];
     char outType[PK_LITTLE];

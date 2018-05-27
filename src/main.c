@@ -1,4 +1,5 @@
 #include "myLibrary.h"
+#include <errno.h>
 #include <fcntl.h>
 #include <signal.h>
 #include <stdio.h>
@@ -111,9 +112,27 @@ int main(int argc, char *argv[]) {
     if (needNew) {
         printf("Started new logger process\n\n");
 
-        /* reset fifo file */
-        //remove(HOME TEMP_DIR LOGGER_FIFO_F); /* use if prefer a new clean fifo (existant data is LOST!) */
-        mkfifo(HOME TEMP_DIR LOGGER_FIFO_F, 0777);
+        /* try to create fifo files (error managing is not a problem here) */
+        if ((mkfifo(HOME TEMP_DIR LOGGER_FIFO_F, 0777) == -1) && (errno != EEXIST)) {
+            perror(LOGGER_FIFO_F "creation");
+            exit(EXIT_FAILURE);
+        }
+
+        int idCountFd;
+        if (mkfifo(HOME TEMP_DIR ID_COUNT_F, 0777) == 0) {
+            printf("creating new ID counter file\n");
+            idCountFd = open(HOME TEMP_DIR ID_COUNT_F, O_RDWR, 0777);
+            printf("WRITING ON FIFO VALUE: 0\n");
+            if (write(idCountFd, "0", strlen("0") + 1) == -1) {
+                perror("Saving count");
+                exit(EXIT_FAILURE);
+            }
+            close(idCountFd);
+        } else if ((mkfifo(HOME TEMP_DIR ID_COUNT_F, 0777) == -1) && (errno == EEXIST)) {
+            printf("GIA' CREATO\n");
+        } else {
+            perror("Opening ID counter file");
+        }
 
         /* fork for logger */
         if ((loggerID = fork()) < 0) {
@@ -185,6 +204,23 @@ int main(int argc, char *argv[]) {
     close(fromShell[1]);
     signal(SIGUSR1, unpauser);
 
+    /* ID */
+    char idBuffer[50];
+    char subIDbuffer[50];
+    int count;
+    int id;
+    int idCountFd;
+    idCountFd = open(HOME TEMP_DIR ID_COUNT_F, O_RDWR, 0777);
+    count = read(idCountFd, idBuffer, sizeof idBuffer);
+    idBuffer[count] = '\0';
+    id = atoi(idBuffer) + 1;
+    sprintf(idBuffer, "%d", id);
+    printf("cID: %s\n", idBuffer);
+
+    write(idCountFd, idBuffer, strlen(idBuffer));
+    close(idCountFd);
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////
+
     Pk data;
     strcpy(data.origCmd, sett.cmd);
 
@@ -220,12 +256,21 @@ int main(int argc, char *argv[]) {
         }
 
         if (needToExec && open_p == 0) {
+            /* saving ID */
+            strcpy(data.logID, idBuffer);
+            sprintf(subIDbuffer, ".%d", subID++);
+            strcat(data.logID, subIDbuffer);
+
             segmentcpy(data.cmd, data.origCmd, sx, dx - 1);
-            sprintf(data.subID, "%d", subID++);
             executeCommand(toShell[1], fromShell[0], &data, lastIsPipe, &proceed);
             sendData(&data, &sett);
             sx = dx + 1;
             lastIsPipe = currentIsPipe;
+
+            /* print output on screen only if command is not piped */
+            if (!lastIsPipe) {
+                printf("%s\n", data.out);
+            }
         }
         needToExec = false;
     }

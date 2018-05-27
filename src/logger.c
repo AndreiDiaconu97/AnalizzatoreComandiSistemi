@@ -10,13 +10,13 @@
 
 /* file specific functions */
 /* ------------------------------------------------------------------------------ */
-void printTxt(char **inputs, char *id);
+void printTxt(char **inputs);
 void usr1_handler(int sig);
 /* ------------------------------------------------------------------------------ */
 
 /* enum for accessing to different parts of the string packet */
 enum received_data {
-    SUB_ID,
+    ID,
     START,
     END,
     DURATION,
@@ -45,6 +45,7 @@ int myFifo; /* needed for usr1_handler() */
 void logger(settings *s) {
     /* logger is closed with a custom signal */
     signal(SIGUSR1, usr1_handler);
+
     char buffer[2 * CMD_S + 6 * PK_LITTLE + PK_BIG]; /* must contain data received from a single comand */
     char *inputs[PK_FIELDS];                         /* used to reference different parts of the buffer */
     char size[65];                                   /* not too big, must contain a string representing one integer */
@@ -55,23 +56,14 @@ void logger(settings *s) {
         exit(EXIT_FAILURE);
     }
 
-    /* id count is stored in a file */
-    int idCountFd;
-    if ((idCountFd = open(HOME TEMP_DIR ID_COUNT_F, O_RDWR, 0777)) == -1) {
-        perror("Opening id counter file");
-
-        printf("creating new one\n");
-        idCountFd = open(HOME TEMP_DIR ID_COUNT_F, O_RDWR | O_TRUNC | O_CREAT, 0777);
-        if (write(idCountFd, "0", strlen("0")) == -1) {
-            perror("Saving count");
-            exit(EXIT_FAILURE);
-        }
-    }
-
     /* create log folder if non-existant and check for errors */
     if (mkdir(HOME LOG_DIR, 0777) && errno != EEXIST) {
         printf("Error while trying to create %s folder\n", CONFIG_DIR);
     }
+
+    /* keep opened the fifo containing id-count so father processes can read from with without blocking */
+    int idCountFd = open(HOME TEMP_DIR ID_COUNT_F, O_WRONLY, 0777);
+    write(idCountFd, "", strlen("") + 1);
 
     /* open/create log file and move pipe to stdout */
     char logFile[PATH_S];
@@ -87,8 +79,6 @@ void logger(settings *s) {
 
     ///* actual program *///
     int count;
-    int id;
-    char idBuffer[32];
     while (1) {
         /* read next data-packet size */
         size[0] = '\0';
@@ -115,15 +105,7 @@ void logger(settings *s) {
             }
         }
 
-        lseek(idCountFd, 0L, SEEK_SET);
-        count = read(idCountFd, idBuffer, sizeof idBuffer);
-        idBuffer[count] = '\0';
-        id = atoi(idBuffer) + 1;
-        sprintf(idBuffer, "%d", id);
-        lseek(idCountFd, 0L, SEEK_SET);
-        write(idCountFd, idBuffer, strlen(idBuffer));
-
-        printTxt(inputs, idBuffer);
+        printTxt(inputs);
     }
 }
 
@@ -131,8 +113,8 @@ void usr1_handler(int sig) {
     write(myFifo, "!", strlen("!") + 1);
 }
 
-void printTxt(char **inputs, char *id) {
-    printf("ID:\t\t%s.%s\n", id, inputs[SUB_ID]);
+void printTxt(char **inputs) {
+    printf("ID:\t\t%s\n", inputs[ID]);
     printf("STARTED:\t%s\n", inputs[START]);
     printf("ENDED:\t\t%s\n", inputs[END]);
     printf("DURATION:\t%ss\n", inputs[DURATION]);

@@ -23,7 +23,7 @@ void sendData(Pk *data, settings *s) {
     }
 
     /* elements lengths */
-    int subIDSize = strlen(data->subID) + 1;
+    int subIDSize = strlen(data->logID) + 1;
     int beginDateSize = strlen(data->beginDate) + 1;
     int completionDateSize = strlen(data->completionDate) + 1;
     int durationSize = strlen(data->duration) + 1;
@@ -61,7 +61,7 @@ void sendData(Pk *data, settings *s) {
     strcpy(&superstring[i], dataLen);
     i += strlen(dataLen) + 1;
 
-    strcpy(&superstring[i], data->subID);
+    strcpy(&superstring[i], data->logID);
     i += subIDSize;
     strcpy(&superstring[i], data->beginDate);
     i += beginDateSize;

@@ -22,7 +22,7 @@ CFLAGS += -D LOG_DIR="\"/$(LOG_DIR)/\""
 # program files #
 LOG_F := log.txt
 LOG_PID_F := loggerPid
-LOGGER_FIFO_F := loggerFifo
+LOGGER_FIFO_F := logger.fifo
 SETTINGS_F := user_settings.txt
 ID_COUNT_F := idCount
 CFLAGS += -D  LOG_F=\"$(LOG_F)\"
@@ -80,7 +80,7 @@ help h:
 	@ echo "CFG_DIR\t: configuration files folder name"
 	@ echo "LOG_DIR\t: log files folder name"
 	@ echo "-----------------------------------------------------------------------------------------------"
-	@ echo "/* PS: directory name can include relative path, but must not include starting dot */"
+	@ echo "/* NOTE: directory name can include relative path, but must not include starting dot */"
 	@ echo ""
 
 ##
