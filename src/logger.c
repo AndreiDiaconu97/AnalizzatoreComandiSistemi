@@ -116,15 +116,15 @@ void usr1_handler(int sig) {
 void printTxt(char **inputs) {
     printf("ID:\t\t%s\n", inputs[ID]);
     printf("STARTED:\t%s\n", inputs[START]);
-    printf("ENDED:\t\t%s\n", inputs[END]);
+    printf("ENDED:\t%s\n", inputs[END]);
     printf("DURATION:\t%ss\n", inputs[DURATION]);
     printf("TYPE:\t\t%s\n", inputs[TYPE]);
     printf("COMMAND:\t%s\n", inputs[CMD]);
     printf("SUBCOMMAND:\t%s\n", inputs[SUB_CMD]);
     printf("OUTPUT:\n\n%s\n\n", inputs[OUT]);
-    printf("LENGTH:\t\t%ld\n", strlen(inputs[OUT]));
+    printf("LENGTH:\t%ld\n", strlen(inputs[OUT]));
     if (strcmp(inputs[CODE], "false") != 0) {
-        printf("RETURN CODE: %s\n", inputs[CODE]);
+        printf("RETURN CODE:%s\n", inputs[CODE]);
     }
     printf("---------------------------------------------------\n");
 }

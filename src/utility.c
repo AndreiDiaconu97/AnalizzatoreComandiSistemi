@@ -149,7 +149,7 @@ void executeCommand(int toShell, int fromShell, Pk *data, bool piping, bool *pro
         data->noOut = false;
     } else {
         strcpy(data->returnC, data->out);
-        strcpy(data->out, "(null)");
+        strcpy(data->out, "");
         data->noOut = true;
     }
 

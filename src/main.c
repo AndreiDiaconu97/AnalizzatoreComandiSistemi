@@ -118,6 +118,7 @@ int main(int argc, char *argv[]) {
             exit(EXIT_FAILURE);
         }
 
+        //////////////////////////////////////////////////////////////////////////////////////////
         int idCountFd;
         if (mkfifo(HOME TEMP_DIR ID_COUNT_F, 0777) == 0) {
             printf("creating new ID counter file\n");
@@ -133,6 +134,7 @@ int main(int argc, char *argv[]) {
         } else {
             perror("Opening ID counter file");
         }
+        //////////////////////////////////////////////////////////////////////////////////////////
 
         /* fork for logger */
         if ((loggerID = fork()) < 0) {
@@ -200,16 +202,18 @@ int main(int argc, char *argv[]) {
     printf("Logger ID: %d\n", loggerID);
     printf("Shell  ID: %d\n", shellID);
 
+    signal(SIGUSR1, unpauser);
     close(toShell[0]);
     close(fromShell[1]);
-    signal(SIGUSR1, unpauser);
 
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////
     /* ID */
     char idBuffer[50];
     char subIDbuffer[50];
     int count;
     int id;
     int idCountFd;
+
     idCountFd = open(HOME TEMP_DIR ID_COUNT_F, O_RDWR, 0777);
     count = read(idCountFd, idBuffer, sizeof idBuffer);
     idBuffer[count] = '\0';
@@ -225,6 +229,20 @@ int main(int argc, char *argv[]) {
     strcpy(data.origCmd, sett.cmd);
 
     printf("\nCommand: %s\n", data.origCmd);
+
+    /* if command has && or ||, no subcommand splitting is performed */
+    if (strstr(data.origCmd, "&&") || strstr(data.origCmd, "||")) {
+        strcpy(data.cmd, data.origCmd);
+        executeCommand(toShell[1], fromShell[0], &data, false, &proceed);
+        sendData(&data, &sett);
+        printf("%s\n", data.out);
+
+        printf("\nFINISHED\n");
+        /* close opened pipes */
+        close(toShell[1]);
+        close(fromShell[0]);
+        return EXIT_SUCCESS;
+    }
 
     /* command factorization */
     int sx = 0;
