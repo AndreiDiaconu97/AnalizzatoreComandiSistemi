@@ -66,7 +66,7 @@ typedef int bool;
 
 /* MACRO for Pack struct */
 #include <limits.h>
-#define PK_FIELDS 9
+#define PK_FIELDS 11
 #define PK_LITTLE 50
 #define PK_BIG PIPE_BUF - (PK_FIELDS * PK_LITTLE)
 /**
@@ -79,6 +79,8 @@ typedef struct Pack {
 
     /* fields actually sent to logger */
     char logID[PK_LITTLE];
+    char shellID[PK_LITTLE];
+    char fatherID[PK_LITTLE];
     char *beginDate;      /* should be less than PK_LITTLE */
     char *completionDate; /* should be less than PK_LITTLE */
     char duration[PK_LITTLE];

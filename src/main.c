@@ -85,10 +85,7 @@ int main(int argc, char *argv[]) {
     if (updateSettings) {
         saveSettings(&sett);
         if (!needNew) {
-            printf("Restarting logger process in order to apply latest settings...\n");
-            /* restart logger */
-            killLogger(loggerID);
-            needNew = true;
+            printf("Settings will be applied with logger restart\n");
         }
         printf("\n");
     }
@@ -118,23 +115,16 @@ int main(int argc, char *argv[]) {
             exit(EXIT_FAILURE);
         }
 
-        //////////////////////////////////////////////////////////////////////////////////////////
+        /* try to create fifo for session logID */
         int idCountFd;
         if (mkfifo(HOME TEMP_DIR ID_COUNT_F, 0777) == 0) {
             printf("creating new ID counter file\n");
-            idCountFd = open(HOME TEMP_DIR ID_COUNT_F, O_RDWR, 0777);
-            printf("WRITING ON FIFO VALUE: 0\n");
-            if (write(idCountFd, "0", strlen("0") + 1) == -1) {
-                perror("Saving count");
-                exit(EXIT_FAILURE);
-            }
-            close(idCountFd);
         } else if ((mkfifo(HOME TEMP_DIR ID_COUNT_F, 0777) == -1) && (errno == EEXIST)) {
-            printf("GIA' CREATO\n");
+            printf("Session logID fifo arleady exists\n");
         } else {
-            perror("Opening ID counter file");
+            perror("Opening session logID fifo");
+            exit(EXIT_FAILURE);
         }
-        //////////////////////////////////////////////////////////////////////////////////////////
 
         /* fork for logger */
         if ((loggerID = fork()) < 0) {
@@ -201,10 +191,22 @@ int main(int argc, char *argv[]) {
     printf("Father ID: %d\n", fatherID);
     printf("Logger ID: %d\n", loggerID);
     printf("Shell  ID: %d\n", shellID);
+    printf("\nCommand: %s\n", sett.cmd);
 
     signal(SIGUSR1, unpauser);
     close(toShell[0]);
     close(fromShell[1]);
+
+    /* initialize Packet struct */
+    Pk data;
+    strcpy(data.origCmd, sett.cmd);
+    char tmpID[50];
+
+    sprintf(tmpID, "%d", fatherID);
+    strcpy(data.fatherID, tmpID);
+
+    sprintf(tmpID, "%d", shellID);
+    strcpy(data.shellID, tmpID);
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////
     /* ID */
@@ -223,12 +225,7 @@ int main(int argc, char *argv[]) {
 
     write(idCountFd, idBuffer, strlen(idBuffer));
     close(idCountFd);
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    Pk data;
-    strcpy(data.origCmd, sett.cmd);
-
-    printf("\nCommand: %s\n", data.origCmd);
+    // ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     /* if command has && or ||, no subcommand splitting is performed */
     if (strstr(data.origCmd, "&&") || strstr(data.origCmd, "||")) {

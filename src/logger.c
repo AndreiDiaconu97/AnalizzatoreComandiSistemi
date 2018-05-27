@@ -17,6 +17,8 @@ void usr1_handler(int sig);
 /* enum for accessing to different parts of the string packet */
 enum received_data {
     ID,
+    SENDER_PID,
+    SHELL_PID,
     START,
     END,
     DURATION,
@@ -63,7 +65,7 @@ void logger(settings *s) {
 
     /* keep opened the fifo containing id-count so father processes can read from with without blocking */
     int idCountFd = open(HOME TEMP_DIR ID_COUNT_F, O_WRONLY, 0777);
-    write(idCountFd, "", strlen("") + 1);
+    write(idCountFd, "0", strlen("0") + 1); /* initialize session logID to 0 */
 
     /* open/create log file and move pipe to stdout */
     char logFile[PATH_S];
@@ -115,6 +117,9 @@ void usr1_handler(int sig) {
 
 void printTxt(char **inputs) {
     printf("ID:\t\t%s\n", inputs[ID]);
+    printf("LOGGER PID:\t\t%d\n", getpid());    
+    printf("SENDER PID:\t\t%s\n", inputs[SENDER_PID]);
+    printf("SHELL PID:\t\t%s\n", inputs[SHELL_PID]);
     printf("STARTED:\t%s\n", inputs[START]);
     printf("ENDED:\t%s\n", inputs[END]);
     printf("DURATION:\t%ss\n", inputs[DURATION]);

@@ -7,14 +7,12 @@ Here a TO-DO list for every file
   logger.c:
     ☐ @high implement log formatting ("txt" and "csv")
     ☐ implement statistical info (input length,...)
-    ☐ settings as --code=<bool> should not restart logger
     ☐ @critical implement command ID
     main.c:
+      ✔ ok @done(18-05-27 14:07)
     settings:
-      ☐ @high save settings and restart logger only if needed; watch in readArguments() and saveSettings()
-      ☐ @low improve user customization for MACROed variables (es.: command size limit)
-      ☐ @low improve settings with useful properties
-      ☐ pass Shell pID to logger, and maybe fatherID too
+      ☐ @critical  save settings and restart logger only if needed; watch in readArguments() and saveSettings()
+      ☐ @critical  improve settings with useful properties
     logger setup:
       ✔ ok @done(18-05-21 16:01)
     shell setup:
@@ -73,5 +71,7 @@ Archive:
   ✔ need settings.c refactoring @done(18-05-26 15:42)
   ✔ @critical NEED FIX: [(pwd && ls)|wc] and  [pwd && ls|wc] should give different outputs @done(18-05-27 03:07)
   ✔ @critical Print command output on screen @done(18-05-27 03:06)
+  ✔ settings as --code=<bool> should not restart logger @done(18-05-27 16:18)
+  ✔ pass Shell pID to logger, and maybe fatherID too @done(18-05-27 15:46)
 
   

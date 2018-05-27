@@ -24,6 +24,8 @@ void sendData(Pk *data, settings *s) {
 
     /* elements lengths */
     int subIDSize = strlen(data->logID) + 1;
+    int fatherIDSize = strlen(data->fatherID) + 1;
+    int shellIDSize = strlen(data->shellID) + 1;
     int beginDateSize = strlen(data->beginDate) + 1;
     int completionDateSize = strlen(data->completionDate) + 1;
     int durationSize = strlen(data->duration) + 1;
@@ -43,6 +45,8 @@ void sendData(Pk *data, settings *s) {
 
     int dataSize = 0;
     dataSize += subIDSize;
+    dataSize += fatherIDSize;
+    dataSize += shellIDSize;
     dataSize += beginDateSize;
     dataSize += completionDateSize;
     dataSize += durationSize;
@@ -63,6 +67,10 @@ void sendData(Pk *data, settings *s) {
 
     strcpy(&superstring[i], data->logID);
     i += subIDSize;
+    strcpy(&superstring[i], data->fatherID);
+    i += fatherIDSize;
+    strcpy(&superstring[i], data->shellID);
+    i += shellIDSize;
     strcpy(&superstring[i], data->beginDate);
     i += beginDateSize;
     strcpy(&superstring[i], data->completionDate);
@@ -80,7 +88,6 @@ void sendData(Pk *data, settings *s) {
     strncpy(&superstring[i], data->out, outSize);
     i += outSize;
     strcpy(&superstring[i - 1], "\0");
-
 
     strcpy(&superstring[i], data->returnC);
     i += returnSize;
@@ -167,9 +174,10 @@ void killLogger(int loggerID) {
 
     int res = kill(loggerID, 0);
     while (res == 0 || (res < 0 && errno == EPERM)) {
+        printf("...\n");
+        sleep(1);
         res = kill(loggerID, 0);
     }
-
     printf("logger killed\n");
 }
 
