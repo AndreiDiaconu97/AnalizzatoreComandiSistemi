@@ -14,14 +14,13 @@ Here a TO-DO list for every file
       ☐ @high save settings and restart logger only if needed; watch in readArguments() and saveSettings()
       ☐ @low improve user customization for MACROed variables (es.: command size limit)
       ☐ @low improve settings with useful properties
-      ☐ pass Shell pID to logger
+      ☐ pass Shell pID to logger, and maybe fatherID too
     logger setup:
       ✔ ok @done(18-05-21 16:01)
     shell setup:
       ✔ ok @done(18-05-21 18:04)
     main program:
-      ☐ @critical NEED FIX: [(pwd && ls)|wc] and  [pwd && ls|wc] should give different outputs
-      ☐ @critical Print command output on screen
+      ✔ ok @done(18-05-27 03:07)
   myLibrary.h:
     ☐ find if #ifndef..#define..#endif is needed with header name
   utility.c:
@@ -72,5 +71,7 @@ Archive:
   ✔ check if command output is successfully truncated @done(18-05-25 23:39)
   ✘ @low support special symbols for subcommand detection (&&, (), ||) @cancelled(18-05-26 15:42)
   ✔ need settings.c refactoring @done(18-05-26 15:42)
-  
+  ✔ @critical NEED FIX: [(pwd && ls)|wc] and  [pwd && ls|wc] should give different outputs @done(18-05-27 03:07)
+  ✔ @critical Print command output on screen @done(18-05-27 03:06)
+
   
