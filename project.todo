@@ -1,7 +1,7 @@
 AnalizzatoreComandiSistemi:
-  ☐ @critical Rename project folder to LABSO1-2017_2018--MAT01_MAT02_MAT03_MAT04
-  ☐ Clean code
-  ☐ Comment code
+  ✔ @critical Rename project folder to LABSO1-2017_2018--MAT01_MAT02_MAT03_MAT04 @done(18-06-09 12:03)
+  ✘ Clean code @cancelled(18-06-09 12:03)
+  ✔ Comment code @done(18-06-09 12:03)
 
 Here a TO-DO list for every file
   logger.c:
@@ -9,7 +9,7 @@ Here a TO-DO list for every file
     main.c:
       ✔ ok @done(18-05-27 14:07)
     settings:
-      ☐ @critical  improve settings with useful properties
+      ✘ @critical  improve settings with useful properties @cancelled(18-06-09 12:03)
     logger setup:
       ✔ ok @done(18-05-21 16:01)
     shell setup:
@@ -17,7 +17,6 @@ Here a TO-DO list for every file
     main program:
       ✔ ok @done(18-05-27 03:07)
   myLibrary.h:
-    ☐ find if #ifndef..#define..#endif is needed with header name
   utility.c:
     ✔ ok @done(18-05-21 16:01)
   Makefile:
