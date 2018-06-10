@@ -76,8 +76,7 @@
 
 #### Esecuzione comandi
 
-Dopo aver suddiviso i comandi in eventuali [sotto-comandi](#suddivisione-di-comandi),
-vengono create due pipe: una per inviare comandi alla shell (**`toShell`**), l'altra (**`fromShell`**) per riceverne **`stdout`** e **`stderr`**.
+Dopo aver suddiviso i comandi in eventuali [sotto-comandi](#suddivisione-di-comandi), vengono create due pipe: una per inviare comandi alla shell (**`toShell`**), l'altra (**`fromShell`**) per riceverne **`stdout`** e **`stderr`**.
 Si effettua un **`fork()`**. Il child sostituisce **`stdin`** con **`toShell[0]`** e **`stdout`** e **`stderr`** con  **`fromShell[1]`** (utilizzando **`dup2(2)`**).
 Esso eseguirà i comandi attraverso **`execvp(2)`**.
 La funzione **`executeCommand(5)`** può ora inviare comandi a tale child e ricevere i rispettivi output, scrivendo ogni informazione in un [**`Pk`**](#pack).
